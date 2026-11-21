@@ -95,7 +95,8 @@ export class DomainIndex {
     };
 
     const total = Object.keys(this.state.domains).length;
-    if (total > config.index.maxDomains) {
+    // 达到上限后批量淘汰，避免每次写入都对全量索引排序造成卡顿
+    if (total > config.index.maxDomains + 200) {
       const oldest = Object.values(this.state.domains)
         .sort((a, b) => a.lastSeen.localeCompare(b.lastSeen))
         .slice(0, total - config.index.maxDomains);

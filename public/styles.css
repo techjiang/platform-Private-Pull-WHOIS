@@ -315,6 +315,11 @@ button {
   padding-bottom: clamp(28px, 4vw, 44px);
 }
 
+.hero-copy,
+.hero-code {
+  min-width: 0;
+}
+
 .eyebrow {
   display: inline-flex;
   align-items: center;
@@ -348,12 +353,14 @@ button {
 }
 
 .hero h1 {
-  margin: 0 0 20px;
-  max-width: 13em;
-  font-size: clamp(2.55rem, 5.4vw, 4.35rem);
-  line-height: 1.02;
-  letter-spacing: -0.045em;
+  margin: 0 0 22px;
+  max-width: 12em;
+  font-size: clamp(2.4rem, 4.8vw, 4rem);
+  line-height: 1.18;
+  letter-spacing: -0.02em;
   font-weight: 750;
+  text-wrap: balance;
+  overflow-wrap: break-word;
 }
 
 .hero h1 .accent {

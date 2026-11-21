@@ -176,7 +176,8 @@ export class HistoryStore {
     this.state.domains[domain] = list;
 
     const domains = Object.keys(this.state.domains);
-    if (domains.length > config.history.maxDomains) {
+    // 达到上限后批量淘汰，避免高并发查询时频繁全量排序
+    if (domains.length > config.history.maxDomains + 50) {
       const oldest = domains
         .map((key) => {
           const snapshots = this.state.domains[key] ?? [];

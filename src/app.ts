@@ -9,7 +9,7 @@ import { AdminSessions } from './admin/sessions.js';
 import { AdminStore } from './admin/store.js';
 import { ApiError } from './lib/errors.js';
 import { FEATURE_LABELS, toolOfPath } from './lib/features.js';
-import { metrics } from './lib/metrics.js';
+import { initMetrics, metrics, persistMetrics } from './lib/metrics.js';
 import { pruneAllCaches } from './lib/cache.js';
 import { Scheduler } from './lib/scheduler.js';
 import { FixedWindowRateLimiter } from './lib/ratelimit.js';
@@ -91,7 +91,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
   await adminStore.init();
   const adminSessions = new AdminSessions(config.admin.sessionTtlMs);
-  await Promise.all([historyStore.init(), domainIndex.init(), registrarRegistry.init()]);
+  await Promise.all([historyStore.init(), domainIndex.init(), registrarRegistry.init(), initMetrics()]);
 
   const app = Fastify({
     logger: { level: config.logLevel },
@@ -215,6 +215,28 @@ export async function buildApp(): Promise<FastifyInstance> {
     run: async () => {
       await Promise.all([historyStore.flush(), domainIndex.flush()]);
       return { summary: '历史记录与域名索引已落盘' };
+    },
+  });
+
+  scheduler.register({
+    key: 'guard',
+    label: '风控状态清理',
+    description: '主动清理过期的限流、每日额度与临时封禁状态，避免来源 IP 记录堆积',
+    intervalMs: 5 * 60 * 1000,
+    run: async () => {
+      const result = webGuard.pruneExpired();
+      return { summary: `当前跟踪 ${result.trackedIps} 个 IP，封禁 ${result.blockedIps} 个` };
+    },
+  });
+
+  scheduler.register({
+    key: 'metrics',
+    label: '调用统计落盘',
+    description: '各接口调用次数先在内存中累计，再由调度器聚合批量写盘，避免高并发时逐条记录',
+    intervalMs: 5 * 60 * 1000,
+    run: async () => {
+      const result = await persistMetrics();
+      return { summary: `累计 ${result.totalRequests} 次调用，覆盖 ${result.tools} 个接口` };
     },
   });
 
@@ -384,7 +406,11 @@ export async function buildApp(): Promise<FastifyInstance> {
 
   app.addHook('onClose', async () => {
     scheduler.stop();
-    await Promise.all([historyStore.flush(), domainIndex.flush()]);
+    await Promise.all([
+      historyStore.flush(),
+      domainIndex.flush(),
+      persistMetrics().catch(() => undefined),
+    ]);
   });
 
   return app;

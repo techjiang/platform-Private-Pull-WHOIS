@@ -143,6 +143,17 @@ export class WebGuard {
     this.guards.clear();
   }
 
+  /** 供智能调度调用：主动清理过期限速与封禁状态，释放内存 */
+  pruneExpired(): { trackedIps: number; blockedIps: number } {
+    this.prune(Date.now(), true);
+    const now = Date.now();
+    let blockedIps = 0;
+    for (const guard of this.guards.values()) {
+      if (guard.blockedUntil > now) blockedIps += 1;
+    }
+    return { trackedIps: this.rates.size, blockedIps };
+  }
+
   private guardFor(ip: string): GuardState {
     let guard = this.guards.get(ip);
     if (!guard) {
@@ -193,17 +204,17 @@ export class WebGuard {
    * 低频清理过期状态，避免大量不同来源 IP 长期占用内存。
    * 每分钟最多扫描一次，正常情况下不会带来可感知的 CPU 开销。
    */
-  private prune(now: number): void {
-    if (now - this.lastPruneAt < 60_000) return;
+  private prune(now: number, force = false): void {
+    if (!force && now - this.lastPruneAt < 60_000) return;
     this.lastPruneAt = now;
 
-    if (this.rates.size > MAX_TRACKED) {
+    if (force || this.rates.size > MAX_TRACKED) {
       for (const [key, bucket] of this.rates) {
         if (bucket.resetAt <= now) this.rates.delete(key);
       }
     }
 
-    if (this.guards.size > MAX_TRACKED) {
+    if (force || this.guards.size > MAX_TRACKED) {
       for (const [key, guard] of this.guards) {
         if (guard.blockedUntil <= now && now - guard.lastViolation > DAY_MS) {
           this.guards.delete(key);
