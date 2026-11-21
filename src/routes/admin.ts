@@ -239,7 +239,8 @@ export async function adminRoutes(
   });
 
   app.get('/admin', async (_request, reply) => {
-    reply.header('cache-control', 'no-cache');
+    // 后台页面含管理入口，禁止任何中间层缓存
+    reply.header('cache-control', 'no-store');
     return reply.sendFile('admin.html');
   });
 

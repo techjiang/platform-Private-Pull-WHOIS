@@ -299,7 +299,13 @@ function meta(request: FastifyRequest, extra: Record<string, unknown> = {}): Rec
 
 function cacheHeaders(reply: FastifyReply, cached: boolean, ttlMs: number): void {
   reply.header('x-cache', cached ? 'HIT' : 'MISS');
-  reply.header('cache-control', `public, max-age=${Math.min(120, Math.max(1, Math.round(ttlMs / 1000)))}`);
+  // s-maxage 让 CDN 边缘节点缓存查询结果，热门域名可直接命中而无需回源
+  const maxAge = Math.min(120, Math.max(1, Math.round(ttlMs / 1000)));
+  const edgeTtl = Math.min(30, maxAge);
+  reply.header(
+    'cache-control',
+    `public, max-age=${maxAge}, s-maxage=${edgeTtl}, stale-while-revalidate=30`,
+  );
 }
 
 function remember(data: WhoisData): void {

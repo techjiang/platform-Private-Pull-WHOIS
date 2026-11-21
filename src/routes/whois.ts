@@ -129,9 +129,12 @@ async function performLookup(
   }
 
   reply.header('x-cache', result.cached ? 'HIT' : 'MISS');
+  const edgeTtl = Math.min(30, Math.max(1, Math.round(result.ttlMs / 1000)));
   reply.header(
     'cache-control',
-    refresh ? 'no-store' : `public, max-age=${Math.min(60, Math.max(1, Math.round(result.ttlMs / 1000)))}`,
+    refresh
+      ? 'no-store'
+      : `public, max-age=${Math.min(60, Math.max(1, Math.round(result.ttlMs / 1000)))}, s-maxage=${edgeTtl}, stale-while-revalidate=30`,
   );
 
   return payloadOf(request, result.record, result.cached, result.ttlMs, includeRaw);

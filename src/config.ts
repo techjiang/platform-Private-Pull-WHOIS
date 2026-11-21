@@ -32,7 +32,7 @@ const apiKeys = list(process.env.API_KEYS);
 const corsOrigins = list(process.env.CORS_ORIGIN);
 
 export const config = {
-  version: '1.2.1',
+  version: '1.2.2',
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
   host: process.env.HOST ?? '0.0.0.0',
@@ -45,7 +45,7 @@ export const config = {
   cache: {
     ttlMs: num(process.env.CACHE_TTL_MS, 10 * 60 * 1000),
     availableTtlMs: num(process.env.CACHE_AVAILABLE_TTL_MS, 60 * 1000),
-    maxEntries: num(process.env.CACHE_MAX_ENTRIES, 1200),
+    maxEntries: num(process.env.CACHE_MAX_ENTRIES, 800),
   },
   rateLimit: {
     windowMs: num(process.env.RATE_LIMIT_WINDOW_MS, 60 * 1000),

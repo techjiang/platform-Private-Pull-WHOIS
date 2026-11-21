@@ -181,9 +181,11 @@ export async function buildApp(): Promise<FastifyInstance> {
     index: ['index.html'],
     cacheControl: false,
     setHeaders(res, filePath) {
-      // HTML 每次都校验，保证版本与资源引用及时更新；带版本参数的静态资源可长期缓存
-      if (/\.html?$/i.test(filePath)) {
-        res.setHeader('cache-control', 'no-cache');
+      // 首页与文档允许 CDN 短暂缓存，命中边缘节点时无需回源；后台页面禁止缓存
+      if (/admin\.html?$/i.test(filePath)) {
+        res.setHeader('cache-control', 'no-store');
+      } else if (/\.html?$/i.test(filePath)) {
+        res.setHeader('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60');
       } else if (/\.(css|js|mjs|svg|ico|png|jpe?g|webp|woff2?)$/i.test(filePath)) {
         res.setHeader('cache-control', 'public, max-age=2592000, immutable');
       } else {
@@ -408,7 +410,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   app.get('/docs', async (_request, reply) => {
-    reply.header('cache-control', 'no-cache');
+    reply.header('cache-control', 'public, max-age=0, s-maxage=60, stale-while-revalidate=60');
     return reply.sendFile('docs.html');
   });
 
