@@ -13,13 +13,13 @@
   --text: #f2eef0;
   --muted: #968a91;
   --muted-2: #6e6369;
-  --accent: #ff7eb6;
-  --accent-2: #ffa8d8;
-  --accent-bg: #ff7eb6;
-  --accent-ink: #2b0717;
-  --accent-soft: rgba(255, 126, 182, 0.14);
-  --blue: #b79bff;
-  --blue-soft: rgba(183, 155, 255, 0.14);
+  --accent: #ff5fa2;
+  --accent-2: #ff9ecb;
+  --accent-bg: #ff5fa2;
+  --accent-ink: #2b0014;
+  --accent-soft: rgba(255, 95, 162, 0.15);
+  --blue: #ff8fc7;
+  --blue-soft: rgba(255, 95, 162, 0.1);
   --ok: #5ee0a0;
   --ok-soft: rgba(94, 224, 160, 0.12);
   --warn: #ffc46b;
@@ -47,13 +47,13 @@
   --text: #1a1115;
   --muted: #6b5a61;
   --muted-2: #8a7a80;
-  --accent: #c2185b;
-  --accent-2: #d63384;
-  --accent-bg: #c2185b;
+  --accent: #d81b60;
+  --accent-2: #f06292;
+  --accent-bg: #d81b60;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(194, 24, 91, 0.09);
-  --blue: #6d4bd1;
-  --blue-soft: rgba(109, 75, 209, 0.09);
+  --accent-soft: rgba(216, 27, 96, 0.09);
+  --blue: #b0004a;
+  --blue-soft: rgba(176, 0, 74, 0.08);
   --ok: #08794a;
   --ok-soft: rgba(8, 121, 74, 0.1);
   --warn: #8a5a08;
@@ -97,9 +97,9 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(58rem 38rem at 12% -8%, rgba(255, 126, 182, 0.13), transparent 62%),
-    radial-gradient(48rem 34rem at 92% 2%, rgba(183, 155, 255, 0.1), transparent 60%),
-    radial-gradient(40rem 30rem at 50% 110%, rgba(255, 168, 216, 0.06), transparent 65%);
+    radial-gradient(58rem 38rem at 12% -8%, rgba(255, 95, 162, 0.15), transparent 62%),
+    radial-gradient(48rem 34rem at 92% 2%, rgba(255, 143, 199, 0.1), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(255, 158, 203, 0.07), transparent 65%);
   pointer-events: none;
 }
 
@@ -120,8 +120,8 @@ body::after {
 
 [data-theme="light"] body::before {
   background:
-    radial-gradient(58rem 38rem at 12% -8%, rgba(194, 24, 91, 0.13), transparent 62%),
-    radial-gradient(48rem 34rem at 92% 2%, rgba(109, 75, 209, 0.08), transparent 60%);
+    radial-gradient(58rem 38rem at 12% -8%, rgba(216, 27, 96, 0.13), transparent 62%),
+    radial-gradient(48rem 34rem at 92% 2%, rgba(240, 98, 146, 0.08), transparent 60%);
 }
 
 [data-theme="light"] body::after {
@@ -219,7 +219,7 @@ button {
   display: block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 3px 10px rgba(255, 126, 182, 0.28));
+  filter: drop-shadow(0 3px 10px rgba(255, 95, 162, 0.32));
 }
 
 /* 亮色主题下换用深色版本，避免浅粉描边在浅背景上发虚 */
@@ -233,7 +233,7 @@ button {
 
 [data-theme='light'] .brand-mark-light {
   display: block !important;
-  filter: drop-shadow(0 2px 6px rgba(194, 24, 91, 0.2));
+  filter: drop-shadow(0 2px 6px rgba(216, 27, 96, 0.22));
 }
 
 .brand:hover .brand-mark {

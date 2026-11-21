@@ -32,7 +32,7 @@ const apiKeys = list(process.env.API_KEYS);
 const corsOrigins = list(process.env.CORS_ORIGIN);
 
 export const config = {
-  version: '1.1.5',
+  version: '1.1.6',
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
   host: process.env.HOST ?? '0.0.0.0',
