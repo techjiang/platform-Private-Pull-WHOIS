@@ -1,6 +1,6 @@
 {
   "name": "pull-whois",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Pull WHOIS — 轻量、生产级的 WHOIS / RDAP / DNS / IP / 历史 / 可用性查询 API",
   "type": "module",
   "main": "dist/server.js",

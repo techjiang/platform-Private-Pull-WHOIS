@@ -22,6 +22,7 @@ import { historyStore } from './services/history.js';
 import { domainIndex } from './services/index.js';
 import { registrarRegistry } from './services/registrars.js';
 import { pruneIcpLocalCache } from './services/icp.js';
+import { prewarmRdapBootstrap } from './whois/rdap.js';
 
 const PUBLIC_DIR = fileURLToPath(new URL('../public', import.meta.url));
 
@@ -31,6 +32,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'referrer-policy': 'no-referrer',
   'permissions-policy': 'geolocation=(), microphone=(), camera=()',
   'cross-origin-opener-policy': 'same-origin',
+  'cross-origin-resource-policy': 'same-site',
   'x-dns-prefetch-control': 'off',
   'x-permitted-cross-domain-policies': 'none',
   'content-security-policy':
@@ -203,6 +205,17 @@ export async function buildApp(): Promise<FastifyInstance> {
     run: async () => {
       const result = pruneAllCaches();
       return { summary: `清理 ${result.removed} 条过期缓存，当前 ${result.entries} 条` };
+    },
+  });
+
+  scheduler.register({
+    key: 'warm',
+    label: '上游数据预热',
+    description: '提前拉取 RDAP 引导数据，减少首次查询 RDAP 域名的等待时间',
+    intervalMs: 6 * 60 * 60 * 1000,
+    run: async () => {
+      const tlds = await prewarmRdapBootstrap();
+      return { summary: `RDAP 引导覆盖 ${tlds} 个 TLD` };
     },
   });
 

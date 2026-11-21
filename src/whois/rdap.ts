@@ -119,6 +119,12 @@ async function loadBootstrap(): Promise<Map<string, string[]>> {
   return bootstrapPromise;
 }
 
+/** 供调度任务预热 RDAP 引导数据，减少首个查询的等待时间 */
+export async function prewarmRdapBootstrap(): Promise<number> {
+  const map = await loadBootstrap();
+  return map.size;
+}
+
 export function entityVcard(entity: RdapEntity | undefined): Record<string, string | null> {
   const result: Record<string, string | null> = {
     fn: null,
