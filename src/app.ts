@@ -176,8 +176,17 @@ export async function buildApp(): Promise<FastifyInstance> {
     root: PUBLIC_DIR,
     prefix: '/',
     index: ['index.html'],
-    cacheControl: true,
-    maxAge: config.isProduction ? '1h' : 0,
+    cacheControl: false,
+    setHeaders(res, filePath) {
+      // HTML 每次都校验，保证版本与资源引用及时更新；带版本参数的静态资源可长期缓存
+      if (/\.html?$/i.test(filePath)) {
+        res.setHeader('cache-control', 'no-cache');
+      } else if (/\.(css|js|mjs|svg|ico|png|jpe?g|webp|woff2?)$/i.test(filePath)) {
+        res.setHeader('cache-control', 'public, max-age=2592000, immutable');
+      } else {
+        res.setHeader('cache-control', 'public, max-age=3600');
+      }
+    },
   });
 
   const limiter = new FixedWindowRateLimiter(config.rateLimit.windowMs);

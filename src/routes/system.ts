@@ -1,3 +1,4 @@
+import { createHash } from 'node:crypto';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import { config } from '../config.js';
 import { DNS_TYPES } from '../services/dns.js';
@@ -81,7 +82,16 @@ export async function systemRoutes(app: FastifyInstance): Promise<void> {
     return { success: true, data: { count: tlds.length, tlds } };
   });
 
-  app.get('/openapi.json', async (_request, reply) => {
+  const openapiEtag = `"${createHash('sha1')
+    .update(JSON.stringify(openapiSpec))
+    .digest('base64url')}"`;
+
+  app.get('/openapi.json', async (request, reply) => {
+    if (request.headers['if-none-match'] === openapiEtag) {
+      reply.code(304).send();
+      return;
+    }
+    reply.header('etag', openapiEtag);
     reply.header('cache-control', 'public, max-age=3600');
     return openapiSpec;
   });
