@@ -2,7 +2,7 @@ export const openapiSpec = {
   openapi: '3.1.0',
   info: {
     title: 'Pull WHOIS API',
-    version: '1.1.4',
+    version: '1.1.5',
     description:
       '轻量、生产级的域名情报 API：WHOIS、RDAP、DNS 记录与传播对比、IP 归属、域名历史、可用性检查、批量可注册检测、名称服务器反查、注册商目录、ICP 备案、TLS 证书与证书链、HTTP 安全响应头体检、域名健康评分与邮件安全记录。域名查询优先通过注册局 RDAP 获取结构化数据，未覆盖时自动回退到 WHOIS 43 端口。所有工具同时提供 /v1（API）与 /web/v1（网页端）两套路径。',
     license: { name: 'GPL-3.0-only', url: 'https://www.gnu.org/licenses/gpl-3.0.html' },

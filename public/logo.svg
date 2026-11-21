@@ -1,13 +1,13 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Pull WHOIS">
   <defs>
     <linearGradient id="pw-logo-g" x1="9" y1="7" x2="55" y2="58" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#e2ff96" />
-      <stop offset="0.52" stop-color="#c8f564" />
-      <stop offset="1" stop-color="#5fe3bd" />
+      <stop stop-color="#ffe0ef" />
+      <stop offset="0.52" stop-color="#ff8fc7" />
+      <stop offset="1" stop-color="#ff5c9a" />
     </linearGradient>
     <linearGradient id="pw-logo-p" x1="24" y1="19" x2="40" y2="47" gradientUnits="userSpaceOnUse">
-      <stop stop-color="#f0ffc0" />
-      <stop offset="1" stop-color="#b8f04e" />
+      <stop stop-color="#ffe8f4" />
+      <stop offset="1" stop-color="#ff6fae" />
     </linearGradient>
   </defs>
   <path
@@ -26,5 +26,5 @@
     d="M22.4 45.6V18.8h10.9c6.9 0 11.4 3.9 11.4 10.2 0 6.4-4.5 10.5-11.6 10.5h-4.2v6.1h-6.5Zm6.5-10.9h4c3.2 0 5-1.5 5-4.6 0-3-1.8-4.6-5-4.6h-4v9.2Z"
     fill="url(#pw-logo-p)"
   />
-  <circle cx="50.6" cy="16.4" r="3.2" fill="#c8f564" />
+  <circle cx="50.6" cy="16.4" r="3.2" fill="#ff8fc7" />
 </svg>

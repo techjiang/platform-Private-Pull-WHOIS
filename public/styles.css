@@ -3,23 +3,23 @@
    ============================================================ */
 :root {
   color-scheme: dark;
-  --bg: #07080a;
-  --bg-soft: #0b0d11;
-  --panel: rgba(16, 18, 23, 0.82);
-  --panel-solid: #111319;
-  --panel-sunken: rgba(0, 0, 0, 0.22);
+  --bg: #0a0709;
+  --bg-soft: #100b0e;
+  --panel: rgba(20, 15, 18, 0.82);
+  --panel-solid: #151015;
+  --panel-sunken: rgba(0, 0, 0, 0.24);
   --border: rgba(255, 255, 255, 0.085);
   --border-strong: rgba(255, 255, 255, 0.16);
-  --text: #eef1f6;
-  --muted: #8b93a6;
-  --muted-2: #626a7c;
-  --accent: #c8f564;
-  --accent-2: #8be9c3;
-  --accent-bg: #c8f564;
-  --accent-ink: #0d1104;
-  --accent-soft: rgba(200, 245, 100, 0.11);
-  --blue: #8fa9ff;
-  --blue-soft: rgba(143, 169, 255, 0.12);
+  --text: #f2eef0;
+  --muted: #968a91;
+  --muted-2: #6e6369;
+  --accent: #ff7eb6;
+  --accent-2: #ffa8d8;
+  --accent-bg: #ff7eb6;
+  --accent-ink: #2b0717;
+  --accent-soft: rgba(255, 126, 182, 0.14);
+  --blue: #b79bff;
+  --blue-soft: rgba(183, 155, 255, 0.14);
   --ok: #5ee0a0;
   --ok-soft: rgba(94, 224, 160, 0.12);
   --warn: #ffc46b;
@@ -37,23 +37,23 @@
 
 [data-theme="light"] {
   color-scheme: light;
-  --bg: #f4f5ef;
-  --bg-soft: #eceee4;
-  --panel: rgba(255, 255, 255, 0.86);
+  --bg: #f8f4f6;
+  --bg-soft: #f1e9ed;
+  --panel: rgba(255, 255, 255, 0.88);
   --panel-solid: #ffffff;
-  --panel-sunken: rgba(20, 30, 5, 0.035);
-  --border: rgba(18, 24, 8, 0.1);
-  --border-strong: rgba(18, 24, 8, 0.2);
-  --text: #121608;
-  --muted: #5f6652;
-  --muted-2: #79816c;
-  --accent: #4f6b05;
-  --accent-2: #7d9a12;
-  --accent-bg: #5d7d06;
+  --panel-sunken: rgba(70, 25, 45, 0.035);
+  --border: rgba(60, 20, 40, 0.1);
+  --border-strong: rgba(60, 20, 40, 0.2);
+  --text: #1a1115;
+  --muted: #6b5a61;
+  --muted-2: #8a7a80;
+  --accent: #c2185b;
+  --accent-2: #d63384;
+  --accent-bg: #c2185b;
   --accent-ink: #ffffff;
-  --accent-soft: rgba(93, 125, 6, 0.09);
-  --blue: #3355cc;
-  --blue-soft: rgba(51, 85, 204, 0.09);
+  --accent-soft: rgba(194, 24, 91, 0.09);
+  --blue: #6d4bd1;
+  --blue-soft: rgba(109, 75, 209, 0.09);
   --ok: #08794a;
   --ok-soft: rgba(8, 121, 74, 0.1);
   --warn: #8a5a08;
@@ -97,9 +97,9 @@ body::before {
   inset: 0;
   z-index: -2;
   background:
-    radial-gradient(58rem 38rem at 12% -8%, rgba(200, 245, 100, 0.1), transparent 62%),
-    radial-gradient(48rem 34rem at 92% 2%, rgba(120, 150, 255, 0.09), transparent 60%),
-    radial-gradient(40rem 30rem at 50% 110%, rgba(139, 233, 195, 0.05), transparent 65%);
+    radial-gradient(58rem 38rem at 12% -8%, rgba(255, 126, 182, 0.13), transparent 62%),
+    radial-gradient(48rem 34rem at 92% 2%, rgba(183, 155, 255, 0.1), transparent 60%),
+    radial-gradient(40rem 30rem at 50% 110%, rgba(255, 168, 216, 0.06), transparent 65%);
   pointer-events: none;
 }
 
@@ -120,8 +120,8 @@ body::after {
 
 [data-theme="light"] body::before {
   background:
-    radial-gradient(58rem 38rem at 12% -8%, rgba(125, 154, 18, 0.14), transparent 62%),
-    radial-gradient(48rem 34rem at 92% 2%, rgba(70, 105, 220, 0.08), transparent 60%);
+    radial-gradient(58rem 38rem at 12% -8%, rgba(194, 24, 91, 0.13), transparent 62%),
+    radial-gradient(48rem 34rem at 92% 2%, rgba(109, 75, 209, 0.08), transparent 60%);
 }
 
 [data-theme="light"] body::after {
@@ -219,10 +219,10 @@ button {
   display: block;
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 3px 10px rgba(200, 245, 100, 0.22));
+  filter: drop-shadow(0 3px 10px rgba(255, 126, 182, 0.28));
 }
 
-/* 亮色主题下换用深色版本，避免浅绿描边在浅背景上发虚 */
+/* 亮色主题下换用深色版本，避免浅粉描边在浅背景上发虚 */
 .brand-mark-light {
   display: none !important;
 }
@@ -233,7 +233,7 @@ button {
 
 [data-theme='light'] .brand-mark-light {
   display: block !important;
-  filter: drop-shadow(0 2px 6px rgba(13, 111, 82, 0.18));
+  filter: drop-shadow(0 2px 6px rgba(194, 24, 91, 0.2));
 }
 
 .brand:hover .brand-mark {

@@ -397,7 +397,7 @@ async function copyText(text) {
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
   const meta = document.querySelector('meta[name="theme-color"]');
-  if (meta) meta.setAttribute('content', theme === 'light' ? '#f4f5ef' : '#07080a');
+  if (meta) meta.setAttribute('content', theme === 'light' ? '#f8f4f6' : '#0a0709');
 }
 
 function initTheme() {
