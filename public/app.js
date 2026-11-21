@@ -262,6 +262,8 @@ const dom = {
   toolOptionNote: document.querySelector('#toolOptionNote'),
   dnsPropOptions: document.querySelector('#dnsPropOptions'),
   dnsPropType: document.querySelector('#dnsPropType'),
+  healthOptions: document.querySelector('#healthOptions'),
+  healthDimensions: document.querySelector('#healthDimensions'),
   chips: document.querySelector('.chips'),
   codePath: document.querySelector('.code-path'),
 };
@@ -1666,6 +1668,7 @@ function applyTool(tool, options = {}) {
   }
   if (dom.toolOptions) dom.toolOptions.hidden = key !== 'dns';
   if (dom.dnsPropOptions) dom.dnsPropOptions.hidden = key !== 'dnsprop';
+  if (dom.healthOptions) dom.healthOptions.hidden = key !== 'health';
   if (dom.toolOptionNote) dom.toolOptionNote.textContent = config.hint;
 
   if (dom.chips) {
@@ -2082,7 +2085,11 @@ function healthTemplate(data, meta) {
         <div class="score-number tone-${tone}">${esc(data.score)}</div>
         <div class="score-copy">
           <strong>${esc(data.summary)}</strong>
-          <p>注册与所有权、DNS、HTTPS 证书、邮件安全各 25 分，合计 100 分</p>
+          <p>${
+            dimensions.length < 4
+              ? `仅评估 ${dimensions.length} 个维度，分数按所选维度归一化为 100 分`
+              : '注册与所有权、DNS、HTTPS 证书、邮件安全各 25 分，合计 100 分'
+          }</p>
         </div>
       </div>
 
@@ -2425,8 +2432,15 @@ function buildToolUrl(tool, value, options = {}) {
       const type = dom.dnsPropType?.value || 'A';
       return `/web/v1/dnsprop/${encoded}?type=${encodeURIComponent(type)}`;
     }
-    case 'health':
+    case 'health': {
+      const picked = [...(dom.healthDimensions?.querySelectorAll('input:checked') ?? [])].map(
+        (input) => input.value,
+      );
+      if (picked.length > 0 && picked.length < 4) {
+        return `/web/v1/health/${encoded}?dimensions=${encodeURIComponent(picked.join(','))}`;
+      }
       return `/web/v1/health/${encoded}`;
+    }
     case 'available':
       return `/web/v1/available?domains=${encoded}`;
     case 'certchain':

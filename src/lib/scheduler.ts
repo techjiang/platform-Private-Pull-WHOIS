@@ -132,10 +132,15 @@ export class Scheduler {
     this.startedAt = null;
   }
 
-  private loopLagMs(): number {
+  private peekLoopLagMs(): number {
     const mean = this.histogram.mean;
-    this.histogram.reset();
     return Number.isFinite(mean) ? Math.round((mean / 1e6) * 10) / 10 : 0;
+  }
+
+  private loopLagMs(): number {
+    const lag = this.peekLoopLagMs();
+    this.histogram.reset();
+    return lag;
   }
 
   private async tick(): Promise<void> {
@@ -245,7 +250,7 @@ export class Scheduler {
     return {
       policy: this.getPolicy(),
       running: this.running,
-      loopLagMs: this.loopLagMs(),
+      loopLagMs: this.peekLoopLagMs(),
       inflight: metrics.inflight,
       startedAt: this.startedAt,
       jobs: [...this.jobs.values()].map((job) => this.jobSnapshot(job)),

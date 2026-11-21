@@ -32,6 +32,7 @@ const SECURITY_HEADERS: Record<string, string> = {
   'permissions-policy': 'geolocation=(), microphone=(), camera=()',
   'cross-origin-opener-policy': 'same-origin',
   'x-dns-prefetch-control': 'off',
+  'x-permitted-cross-domain-policies': 'none',
   'content-security-policy':
     "default-src 'self'; base-uri 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'",
 };

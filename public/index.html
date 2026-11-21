@@ -212,6 +212,17 @@
             <span class="tool-option-note" id="dnsPropOptionNote">同时对比阿里 DNS、DNSPod、Cloudflare 与 Google DNS</span>
           </div>
 
+          <div class="tool-options" id="healthOptions" hidden>
+            <span class="tool-option-label">评估维度</span>
+            <div class="health-dims" id="healthDimensions">
+              <label class="tool-check"><input type="checkbox" value="registration" checked /> 注册</label>
+              <label class="tool-check"><input type="checkbox" value="dns" checked /> DNS</label>
+              <label class="tool-check"><input type="checkbox" value="tls" checked /> 证书</label>
+              <label class="tool-check"><input type="checkbox" value="mail" checked /> 邮件</label>
+            </div>
+            <span class="tool-option-note">只评估所选维度，未选维度不发起上游请求</span>
+          </div>
+
           <div class="chips" aria-label="示例输入">
             <span class="chips-label">试试</span>
             <button type="button" class="chip" data-domain="example.com">example.com</button>
@@ -430,7 +441,7 @@
     <footer class="footer shell">
       <div class="footer-left">
         <span class="footer-brand">Pull WHOIS</span>
-        <span>v1.1.1</span>
+        <span>v1.1.2</span>
         <span>GPL-3.0 License</span>
       </div>
       <div class="footer-links">
