@@ -154,14 +154,14 @@ export function parseWhoisDate(raw: string | null | undefined): string | null {
     }
   }
 
-  // 02.01.2024 / 02/01/2024（点号优先按 DMY，斜杠优先按 MDY）
+  // 02.01.2024 / 02/01/2024 / 02-01-2024（点号与短横线优先按 DMY，斜杠优先按 MDY）
   if (year === undefined) {
-    m = /^(\d{1,2})([./])(\d{1,2})\2(\d{4})(?:[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(value);
+    m = /^(\d{1,2})([./-])(\d{1,2})\2(\d{4})(?:[T\s](\d{1,2}):(\d{2})(?::(\d{2}))?)?/.exec(value);
     if (m) {
       const first = Number(m[1]);
       const secondPart = Number(m[3]);
       const sep = m[2];
-      const dayFirst = sep === '.' || first > 12;
+      const dayFirst = sep === '.' || sep === '-' || first > 12;
       day = dayFirst ? first : secondPart;
       month = dayFirst ? secondPart : first;
       year = Number(m[4]);

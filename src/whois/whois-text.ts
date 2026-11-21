@@ -8,6 +8,15 @@ interface Entry {
 
 const IGNORED_LINE_RE = /^(>>>|%|#|--|<\?)/;
 
+/** 只取响应前导部分用于可用性判定，避开注册局页脚 / 使用条款里的 “available / not found” 等字样误判 */
+const LEAD_LINES = 60;
+const LEAD_CHARS = 4000;
+
+function leadText(text: string): string {
+  const lead = text.replace(/\r/g, '').split('\n').slice(0, LEAD_LINES).join('\n');
+  return lead.length > LEAD_CHARS ? lead.slice(0, LEAD_CHARS) : lead;
+}
+
 function toEntries(text: string): Entry[] {
   const entries: Entry[] = [];
   let last: Entry | null = null;
@@ -18,7 +27,7 @@ function toEntries(text: string): Entry[] {
     if (IGNORED_LINE_RE.test(line.trim())) continue;
 
     // JPRS 等注册局使用 “[Key] value” 形式
-    const bracketMatch = /^\s*\[([^\]\n]{1,60})\]\s*(.*)$/.exec(line);
+    const bracketMatch = /^\s*\[([^\]\n]{1,160})\]\s*(.*)$/.exec(line);
     if (bracketMatch) {
       last = {
         key: normalizeKey(bracketMatch[1] as string),
@@ -28,7 +37,7 @@ function toEntries(text: string): Entry[] {
       continue;
     }
 
-    const match = /^\s*([^:\n]{1,60}?)\s*:\s*(.*)$/.exec(line);
+    const match = /^\s*([^:\n]{1,160}?)\s*:\s*(.*)$/.exec(line);
     if (match) {
       last = { key: normalizeKey(match[1] as string), value: (match[2] ?? '').trim() };
       entries.push(last);
@@ -79,6 +88,26 @@ function getFirst(map: Map<string, string[]>, keys: readonly string[]): string |
   return null;
 }
 
+/** 前缀匹配：部分注册局（如 HKIRC）字段名带括号说明，无法精确命中别名 */
+function getFirstPrefix(map: Map<string, string[]>, prefixes: readonly string[]): string | null {
+  for (const [key, values] of map) {
+    if (!prefixes.some((prefix) => key.startsWith(prefix))) continue;
+    for (const value of values) {
+      if (value.trim()) return value.trim();
+    }
+  }
+  return null;
+}
+
+function getAllPrefix(map: Map<string, string[]>, prefixes: readonly string[]): string[] {
+  const values: string[] = [];
+  for (const [key, found] of map) {
+    if (!prefixes.some((prefix) => key.startsWith(prefix))) continue;
+    values.push(...found);
+  }
+  return values;
+}
+
 function firstDate(map: Map<string, string[]>, keys: readonly string[]): string | null {
   for (const key of keys) {
     const found = map.get(key);
@@ -102,6 +131,7 @@ const AVAILABILITY_PATTERNS: RegExp[] = [
   /domain (name )?not found/,
   /is available for (registration|purchase)/,
   /available for registration/,
+  /not (been )?available for registration/,
   /has not been registered/,
   /not been registered/,
   /the queried object does not exist/,
@@ -115,31 +145,20 @@ const AVAILABILITY_PATTERNS: RegExp[] = [
 const UPSTREAM_ERROR_RE =
   /(rate limit|quota exceeded|too many requests|try again later|connection refused|query limit)/i;
 
-/** 判断 WHOIS 文本是否表示“域名可注册” */
+/** 判断 WHOIS 文本是否表示“域名可注册”（仅扫描前导部分，避免页脚误判） */
 export function isAvailableText(text: string): boolean {
-  const normalized = text.toLowerCase();
+  const normalized = leadText(text).toLowerCase();
   if (!normalized.trim()) return false;
   if (UPSTREAM_ERROR_RE.test(normalized)) return false;
-
-  const hasRegistrationData =
-    /(creation date|created on|created:|registered on|registrar:|domain name:|registry expiry|expiry date)/.test(
-      normalized,
-    );
-  if (hasRegistrationData) {
-    return /no match|not found|no entries|available/.test(normalized) && !/registrar:/.test(normalized);
-  }
-
   return AVAILABILITY_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
+/** 表示“未注册 / 空闲”的状态值，出现时不作为已注册证据 */
+const FREE_STATUSES = new Set(['free', 'available', 'unregistered', 'not registered']);
+
 /** 把原始 WHOIS 文本解析为统一结构 */
 export function parseWhois(text: string): ParsedRecord {
-  if (isAvailableText(text)) {
-    return emptyParsedRecord(true);
-  }
-
   const map = toMap(toEntries(text));
-  const available = false;
 
   const registrar = createRegistrar({
     name: getFirst(map, [
@@ -176,7 +195,7 @@ export function parseWhois(text: string): ParsedRecord {
     'owner name',
     'owner',
     '登録者名',
-  ]);
+  ]) ?? getFirstPrefix(map, ['holder english name', 'holder name', 'registrant name', 'owner name']);
   const registrantOrg = getFirst(map, [
     'registrant organization',
     'registrant organisation',
@@ -200,13 +219,14 @@ export function parseWhois(text: string): ParsedRecord {
       name: registrantName,
       organization: registrantOrg,
       email: explicitEmail ?? fallbackEmail,
-      country: getFirst(map, [
-        'registrant country',
-        'registrant country/economy',
-        'registrant country code',
-        'holder country',
-        'owner country',
-      ]),
+      country:
+        getFirst(map, [
+          'registrant country',
+          'registrant country/economy',
+          'registrant country code',
+          'holder country',
+          'owner country',
+        ]) ?? getFirstPrefix(map, ['registrant country', 'holder country', 'owner country', 'country']),
     },
     text,
   );
@@ -233,75 +253,104 @@ export function parseWhois(text: string): ParsedRecord {
       ? registryDomainId
       : null;
 
+  const dates = {
+    created: firstDate(map, [
+      'creation date',
+      'created on',
+      'created',
+      'registration time',
+      'registration date',
+      'registered on',
+      'registered date',
+      'registered',
+      'domain registration date',
+      'domain name commencement date',
+      'commencement date',
+      'activation date',
+      'created date',
+      '登録年月日',
+      '注册时间',
+      '注册日期',
+    ]),
+    updated: firstDate(map, [
+      'updated date',
+      'last updated on',
+      'last updated',
+      'last update',
+      'last-modified',
+      'last modified',
+      'changed',
+      'modified',
+      'update date',
+      'last update date',
+      '最終更新',
+    ]),
+    expires: firstDate(map, [
+      'registry expiry date',
+      'expiration date',
+      'expiry date',
+      'expires on',
+      'expires',
+      'expiration time',
+      'registrar registration expiration date',
+      'paid-till',
+      'valid until',
+      'validity',
+      'renewal date',
+      'expire date',
+      'expiration',
+      'date of expiry',
+      '有効期限',
+      '到期时间',
+    ]),
+  };
+
+  const nameservers = extractNameservers([
+    ...getAll(map, [
+      'name server',
+      'name servers',
+      'nameserver',
+      'nameservers',
+      'nserver',
+      'dns server',
+      'dns servers',
+      'name server information',
+      'ネームサーバ',
+    ]),
+    // 前缀兜底：覆盖 “Name Servers Information” 等单复数/带说明的写法
+    ...getAllPrefix(map, ['name server', 'nameserver', 'nserver', 'dns server', 'ネームサーバ']),
+  ]);
+
+  const dnssec = normalizeDnssec(
+    getAll(map, ['dnssec', 'dnssec status', 'dnssec signed', 'dnssec delegation signed']),
+  );
+
+  // 可用性判定：只要解析到任何注册证据，就判定为已注册，
+  // 避免注册局页脚 / 使用条款里的 “available / not found” 字样造成误判。
+  const meaningfulStatuses = statuses.filter((status) => !FREE_STATUSES.has(status.toLowerCase()));
+  const hasRegistrationEvidence = Boolean(
+    registrar ||
+      registrant ||
+      dates.created ||
+      dates.expires ||
+      cleanedRegistryDomainId ||
+      nameservers.length > 0 ||
+      meaningfulStatuses.length > 0,
+  );
+
+  const available = hasRegistrationEvidence ? false : isAvailableText(text);
+  if (available) {
+    return emptyParsedRecord(true);
+  }
+
   return {
-    available,
+    available: false,
     registrar,
     registrant,
-    dates: {
-      created: firstDate(map, [
-        'creation date',
-        'created on',
-        'created',
-        'registration time',
-        'registration date',
-        'registered on',
-        'registered date',
-        'registered',
-        'domain registration date',
-        'commencement date',
-        'activation date',
-        'created date',
-        '登録年月日',
-        '注册时间',
-        '注册日期',
-      ]),
-      updated: firstDate(map, [
-        'updated date',
-        'last updated on',
-        'last updated',
-        'last update',
-        'last-modified',
-        'last modified',
-        'changed',
-        'modified',
-        'update date',
-        'last update date',
-        '最終更新',
-      ]),
-      expires: firstDate(map, [
-        'registry expiry date',
-        'expiration date',
-        'expiry date',
-        'expires on',
-        'expires',
-        'expiration time',
-        'registrar registration expiration date',
-        'paid-till',
-        'valid until',
-        'validity',
-        'renewal date',
-        'expire date',
-        'expiration',
-        'date of expiry',
-        '有効期限',
-        '到期时间',
-      ]),
-    },
+    dates,
     statuses,
-    nameservers: extractNameservers(
-      getAll(map, [
-        'name server',
-        'name servers',
-        'nameserver',
-        'nameservers',
-        'nserver',
-        'dns server',
-        'dns servers',
-        'name server information',
-        'ネームサーバ',
-      ]),
-    ),
-    dnssec: normalizeDnssec(getAll(map, ['dnssec', 'dnssec status', 'dnssec signed', 'dnssec delegation signed'])),
+    nameservers,
+    dnssec,
     registryDomainId: cleanedRegistryDomainId,
   };
 }

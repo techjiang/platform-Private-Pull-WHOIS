@@ -138,6 +138,8 @@ export async function buildApp(): Promise<FastifyInstance> {
       apiError = ApiError.internal();
     }
 
+    // 错误响应一律禁止中间层缓存，避免限流 / 鉴权失败等瞬时状态被边缘节点长期缓存
+    reply.header('cache-control', 'no-store');
     reply.status(apiError.statusCode).send({
       ...apiError.toJSON(),
       meta: errorMeta(request),
@@ -145,6 +147,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   });
 
   app.setNotFoundHandler((request, reply) => {
+    reply.header('cache-control', 'no-store');
     reply.status(404).send({
       success: false,
       error: { code: 'NOT_FOUND', message: '接口或资源不存在' },
