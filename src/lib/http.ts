@@ -36,10 +36,11 @@ export async function httpGet(url: string, options: HttpOptions): Promise<HttpRe
 
     const maxBytes = options.maxBytes ?? 2 * 1024 * 1024;
     const reader = response.body?.getReader();
-    let text = '';
 
+    let text: string;
     if (reader) {
       const decoder = new TextDecoder();
+      const chunks: string[] = [];
       let received = 0;
       while (true) {
         const { done, value } = await reader.read();
@@ -50,10 +51,12 @@ export async function httpGet(url: string, options: HttpOptions): Promise<HttpRe
             await reader.cancel();
             break;
           }
-          text += decoder.decode(value, { stream: true });
+          chunks.push(decoder.decode(value, { stream: true }));
         }
       }
-      text += decoder.decode();
+      chunks.push(decoder.decode());
+      // 分片收集后一次性拼接，避免大响应下反复创建字符串造成 O(n²) 开销
+      text = chunks.join('');
     } else {
       text = await response.text();
     }

@@ -170,7 +170,8 @@ export async function buildApp(): Promise<FastifyInstance> {
     maxAge: 86400,
   });
 
-  await app.register(compress, { global: true, threshold: 1024 });
+  // 动态 JSON 以 gzip 为主：压缩速度明显快于 brotli，降低响应延迟与 CPU 占用
+  await app.register(compress, { global: true, threshold: 1024, encodings: ['gzip', 'deflate'] });
 
   await app.register(fastifyStatic, {
     root: PUBLIC_DIR,
