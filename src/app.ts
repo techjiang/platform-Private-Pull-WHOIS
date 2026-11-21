@@ -189,6 +189,7 @@ export async function buildApp(): Promise<FastifyInstance> {
     label: '缓存整理',
     description: '清理各查询缓存中已过期的条目，释放内存',
     intervalMs: 10 * 60 * 1000,
+    critical: true,
     run: async () => {
       const result = pruneAllCaches();
       return { summary: `清理 ${result.removed} 条过期缓存，当前 ${result.entries} 条` };
@@ -222,6 +223,9 @@ export async function buildApp(): Promise<FastifyInstance> {
     reply.header('x-request-id', request.id);
     for (const [name, value] of Object.entries(SECURITY_HEADERS)) {
       reply.header(name, value);
+    }
+    if (request.url.startsWith('/admin')) {
+      reply.header('x-robots-tag', 'noindex, nofollow');
     }
     if (request.protocol === 'https') {
       reply.header('strict-transport-security', 'max-age=31536000; includeSubDomains');

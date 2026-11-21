@@ -34,6 +34,8 @@ export interface SchedulerJobDefinition {
   label: string;
   description: string;
   intervalMs: number;
+  /** 关键任务：即使持续有请求，超期后也要择机执行，避免缓存长期不清理 */
+  critical?: boolean;
   run: () => Promise<SchedulerRunResult | void>;
 }
 
@@ -85,6 +87,8 @@ interface JobState {
 const TICK_MS = 20_000;
 const MAX_LAG_MS = 80;
 const MAX_BACKOFF_MS = 6 * 60 * 60 * 1000;
+/** 关键任务最多可被繁忙流量推迟的时间 */
+const CRITICAL_GRACE_MS = 5 * 60 * 1000;
 
 export class Scheduler {
   private readonly jobs = new Map<string, JobState>();
@@ -161,17 +165,21 @@ export class Scheduler {
       return;
     }
 
+    let job = due[0] as JobState;
     if (policy.idleOnly) {
       const lag = this.loopLagMs();
-      if (metrics.inflight > 0 || lag > MAX_LAG_MS) {
-        for (const job of due) job.skippedCount += 1;
+      const overdueCritical = due.find(
+        (item) => item.definition.critical && now - item.nextRunAt >= CRITICAL_GRACE_MS,
+      );
+      if (lag > MAX_LAG_MS || (!overdueCritical && metrics.inflight > 0)) {
+        for (const item of due) item.skippedCount += 1;
         return;
       }
+      if (overdueCritical) job = overdueCritical;
     } else {
       this.histogram.reset();
     }
 
-    const job = due[0] as JobState;
     await this.execute(job);
   }
 
