@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>API 文档 — Pull WHOIS 域名情报接口</title>
+    <meta
+      name="description"
+      content="Pull WHOIS API 参考：WHOIS、RDAP、DNS、IP 归属、域名历史、可用性、名称服务器反查、注册商目录、ICP 备案、TLS 证书与证书链、HTTP 安全头体检、DNS 传播对比、域名健康评分、批量可注册、邮件安全、限流、错误码与数据模型。"
+    />
+    <meta name="keywords" content="WHOIS API,RDAP API,DNS 查询 API,DNS传播检测 API,IP 查询 API,域名历史 API,可用性检查 API,ICP备案查询API,TLS证书API,证书链API,HTTP安全头检测API,域名健康评分API,批量可注册查询API,SPF DMARC DKIM API" />
+    <meta name="robots" content="index,follow" />
+    <link rel="canonical" href="https://pull-whois.asoe.cn/docs" />
+    <meta property="og:type" content="article" />
+    <meta property="og:title" content="API 文档 — Pull WHOIS" />
+    <meta
+      property="og:description"
+      content="十六种域名情报工具的完整 API 参考，含请求参数、响应示例、错误码与数据模型。"
+    />
+    <meta property="og:url" content="https://pull-whois.asoe.cn/docs" />
+    <meta name="theme-color" content="#07080a" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/logo-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
+    <link rel="apple-touch-icon" href="/logo-light.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <a class="brand" href="/" aria-label="Pull WHOIS 首页">
+          <img class="brand-mark brand-mark-dark" src="/logo.svg" alt="" width="32" height="32" />
+          <img class="brand-mark brand-mark-light" src="/logo-light.svg" alt="" width="32" height="32" />
+          <span class="brand-text">Pull <em>WHOIS</em></span>
+        </a>
+        <nav class="nav" aria-label="主导航">
+          <a href="/">查询界面</a>
+          <a href="/openapi.json">OpenAPI</a>
+          <a href="/health">健康检查</a>
+          <a href="/admin">管理</a>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换明暗主题">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main" class="shell docs-main">
+      <aside class="docs-nav" aria-label="文档目录">
+        <div class="docs-nav-title">API 参考</div>
+        <nav id="docsNav">
+          <a href="#intro">概览</a>
+          <a href="#auth">认证与限流</a>
+          <a href="#features">证书、邮件与站点体检</a>
+          <a href="#errors">错误码</a>
+        </nav>
+      </aside>
+
+      <div class="docs-content">
+        <section class="docs-hero" id="intro">
+          <p class="eyebrow"><span class="live-dot"></span> PULL WHOIS · API REFERENCE</p>
+          <h1>域名查询 API</h1>
+          <p>
+            一个接口拿到结构化的域名注册信息。服务端优先请求注册局 RDAP，未覆盖或失败时自动回退到
+            WHOIS 43 端口，并统一字段、日期、状态码与命名服务器格式。十六种工具覆盖注册、DNS、
+            证书、安全体检与健康评分，全部返回统一 JSON 结构。
+          </p>
+          <div class="docs-meta">
+            <span id="specVersion">v1.1.1</span>
+            <span>OpenAPI 3.1</span>
+            <a href="/openapi.json" target="_blank" rel="noopener">下载规范</a>
+            <a href="/web/v1/whois/example.com?raw=true" target="_blank" rel="noopener">在线试一次</a>
+          </div>
+        </section>
+
+        <section class="auth-note" id="auth">
+          <div>
+            <strong>两套独立策略：</strong>网页端使用 <code>/web/v1/*</code>，始终无需 API Key，由后台
+            「网页端查询」开关控制；API 使用 <code>/v1/*</code>，是否需要 Key 由「API 是否需要
+            Key」开关单独控制。两者互不影响。
+            <br />
+            <strong>API 认证：</strong>开启 API Key 校验后请在请求头携带
+            <code>x-api-key</code> 或 <code>Authorization: Bearer &lt;key&gt;</code>，密钥可在
+            <a href="/admin">管理后台</a> 创建与停用；服务启动时的 <code>API_KEYS</code> 环境变量同样有效。
+            <br />
+            <strong>限流：</strong>默认每 IP 每分钟 120 次，携带有效 API Key 每分钟 600 次。响应头包含
+            <code>ratelimit-limit</code>、<code>ratelimit-remaining</code>、<code>ratelimit-reset</code>。
+            <br />
+            <strong>网页端额度与风控：</strong>管理员可在后台单独设置网页端的窗口请求上限、限流窗口、
+            每日每 IP 额度与违规临时封禁。额度开启时响应头额外返回
+            <code>x-web-quota-limit</code>、<code>x-web-quota-remaining</code>；超限返回
+            <code>429</code>，并通过 <code>Retry-After</code> 给出等待秒数。API 调用不受该策略影响。
+            <br />
+            <strong>密钥策略：</strong>每个密钥可单独设置有效期、累计配额、每分钟限速、功能作用域
+            （whois / rdap / dns / ip / uptime / history / nameservers / registrars / icp / tls / certchain / mail /
+            http / dnsprop / health / available）与 IP/CIDR
+            白名单。响应头会返回 <code>x-key-quota-used</code>、<code>x-key-quota-limit</code>、
+            <code>x-key-quota-remaining</code> 与 <code>x-key-expires-at</code> 便于调用方自查。
+          </div>
+        </section>
+
+        <section id="features">
+          <h2 class="docs-section-title">证书、邮件与站点体检</h2>
+          <p class="endpoint-desc">
+            以下工具完全由本站直接查询：证书通过目标端口完成 TLS 握手，邮件记录通过权威 DNS 解析后在本地校验，
+            HTTP 安全头由本站直接请求目标站点读取，均不依赖第三方检测服务。
+            以下接口同时可在网页端对应工具中使用。
+          </p>
+
+          <article class="endpoint-card" id="tls-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/tls/{host}?port=443</code>
+            </div>
+            <h2>TLS 证书检查</h2>
+            <p class="endpoint-desc">
+              与目标端口直接握手，返回证书主体、颁发者、有效期、SAN、公钥长度、SHA-256 指纹、
+              证书链、TLS 版本、加密套件与 ALPN，支持非 443 端口。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>host</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名，不接受 IP 或内网地址，例如 example.com。</td></tr>
+                <tr><td><code>port</code></td><td class="type-cell">query</td><td class="type-cell">integer</td><td>端口 1–65535，默认 443；也可使用 <code>/v1/tls?host=example.com&amp;port=443</code>。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/tls/example.com' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "host": "example.com",
+    "port": 443,
+    "servername": "example.com",
+    "address": "93.184.216.34",
+    "family": 4,
+    "reachable": true,
+    "authorized": true,
+    "authorizationError": null,
+    "protocol": "TLSv1.3",
+    "cipher": { "name": "TLS_AES_128_GCM_SHA256", "version": "TLSv1.3" },
+    "alpn": "http/1.1",
+    "certificate": {
+      "subject": { "commonName": "example.com", "organization": null, "country": null },
+      "issuer": { "commonName": "DigiCert Global G2 TLS RSA SHA256 2020 CA1", "organization": "DigiCert Inc", "country": "US" },
+      "validFrom": "2026-09-26T00:00:00.000Z",
+      "validTo": "2027-03-25T23:59:59.000Z",
+      "daysRemaining": 124,
+      "expired": false,
+      "notYetValid": false,
+      "serialNumber": "0A:1B:...",
+      "fingerprint256": "85:CA:...:7A",
+      "san": ["example.com", "*.example.com"],
+      "keyBits": 2048,
+      "chainLength": 3
+    },
+    "note": "证书信息由本站直接与目标端口完成 TLS 握手获取…",
+    "checkedAt": "2026-11-21T10:00:00.000Z",
+    "cached": false,
+    "ttlMs": 1800000
+  },
+  "meta": { "requestId": "req-1", "source": "tls", "durationMs": 210, "cached": false }
+}</pre>
+            <p class="endpoint-desc">
+              说明：握手使用 SNI；证书链长度来自完整链读取；结果缓存 30 分钟。
+              <code>authorized=false</code> 时由 <code>authorizationError</code> 说明原因（过期、自签名、域名不匹配等）。
+              校验结果仅供参考，请以浏览器实际提示为准。
+            </p>
+          </article>
+
+          <article class="endpoint-card" id="mail-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/mail/{domain}?selector=default,google</code>
+            </div>
+            <h2>邮件安全记录</h2>
+            <p class="endpoint-desc">
+              一次返回 MX、SPF、DMARC、DKIM 原始记录与逐项检查结论，并给出「良好 / 需改进 / 缺少关键配置」总评。
+              全部通过本站 DNS 解析与本地解析器完成。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>domain</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名或邮箱中的域名，例如 cloudflare.com。</td></tr>
+                <tr><td><code>selector</code></td><td class="type-cell">query</td><td class="type-cell">string</td><td>可选，DKIM 选择器，逗号分隔，最多 6 个；默认探测 default、google、selector1、selector2。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/mail/cloudflare.com?selector=default,google' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "domain": "cloudflare.com",
+    "mx": [{ "priority": 10, "exchange": "mx1.example.net" }],
+    "aFallback": [],
+    "spf": {
+      "raw": "v=spf1 include:_spf.example.net -all",
+      "version": true,
+      "mechanisms": ["include:_spf.example.net", "-all"],
+      "all": "all",
+      "allQualifier": "-",
+      "includes": ["_spf.example.net"],
+      "ip4": [],
+      "ip6": [],
+      "redirect": null,
+      "lookupCount": 1,
+      "valid": true,
+      "errors": [],
+      "warnings": []
+    },
+    "dmarc": {
+      "raw": "v=DMARC1; p=reject;",
+      "version": true,
+      "policy": "reject",
+      "subdomainPolicy": null,
+      "pct": 100,
+      "rua": [],
+      "ruf": [],
+      "alignment": { "dkim": "r", "spf": "r" },
+      "tags": { "v": "DMARC1", "p": "reject" },
+      "valid": true,
+      "errors": []
+    },
+    "dkim": [{ "selector": "default", "found": false, "info": null }],
+    "checks": [
+      { "id": "mx", "label": "MX 邮件交换记录", "status": "pass", "detail": "4 条 MX 记录" },
+      { "id": "spf", "label": "SPF 发信来源", "status": "pass", "detail": "包含 2 个机制，all=-all" },
+      { "id": "dmarc", "label": "DMARC 策略", "status": "pass", "detail": "p=reject" },
+      { "id": "dkim", "label": "DKIM 签名公钥", "status": "warn", "detail": "常见选择器下未找到 DKIM 公钥" }
+    ],
+    "summary": "需改进",
+    "note": "SPF、DMARC、DKIM 与 MX 均由本站直接查询 DNS 后解析…",
+    "cached": false,
+    "ttlMs": 600000
+  },
+  "meta": { "requestId": "req-2", "source": "mail-dns", "durationMs": 180, "cached": false }
+}</pre>
+            <p class="endpoint-desc">
+              说明：DKIM 选择器无法通过 DNS 枚举，只能探测已知选择器；<code>found=true</code> 但公钥为空表示该选择器已撤销。
+              SPF 的 DNS 查询机制超过 RFC 10 次上限、<code>+all</code> 等风险会写入 <code>errors</code> 或 <code>warnings</code>。
+              结果缓存 10 分钟。
+            </p>
+          </article>
+
+          <article class="endpoint-card" id="http-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/http/{target}</code>
+            </div>
+            <h2>HTTP 安全响应头体检</h2>
+            <p class="endpoint-desc">
+              直连目标站点读取响应头，检查 HSTS、CSP、X-Frame-Options、MIME 嗅探、Referrer-Policy、
+              Permissions-Policy、COOP 与 Cookie 安全属性，按权重计算 0–100 分与 A–E 等级。
+              只读取响应头并立即取消正文，拒绝内网与保留地址。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>target</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名或完整 http(s) URL；也支持 <code>/v1/http?target=example.com</code>。</td></tr>
+                <tr><td><code>refresh</code></td><td class="type-cell">query</td><td class="type-cell">boolean</td><td>传 <code>1</code> 强制重新体检并绕过缓存，默认 false。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/http/example.com' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "host": "example.com",
+    "finalUrl": "https://example.com/",
+    "https": true,
+    "reachable": true,
+    "status": 200,
+    "latencyMs": 142,
+    "score": 72,
+    "grade": "C",
+    "summary": "基础安全头可用，仍有 3 项建议改进",
+    "security": [
+      { "id": "hsts", "label": "HSTS 强制 HTTPS", "status": "pass", "detail": "max-age=31536000" },
+      { "id": "csp", "label": "内容安全策略 CSP", "status": "fail", "detail": "未设置 Content-Security-Policy" }
+    ],
+    "issues": [{ "label": "补充 CSP", "severity": "medium", "detail": "建议设置 default-src 'self'" }],
+    "redirects": [],
+    "note": "响应头由本站直接请求目标站点读取…",
+    "cached": false
+  },
+  "meta": { "requestId": "req-3", "source": "http-probe", "durationMs": 160, "cached": false }
+}</pre>
+            <p class="endpoint-desc">说明：最多跟随 5 次重定向；结果缓存 5 分钟。</p>
+          </article>
+
+          <article class="endpoint-card" id="dnsprop-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/dnsprop/{domain}?type=A</code>
+            </div>
+            <h2>DNS 多解析器传播对比</h2>
+            <p class="endpoint-desc">
+              同时向阿里 DNS、DNSPod、Cloudflare 与 Google DNS 查询同一记录，返回每个解析器的记录、
+              耗时与状态，并按记录集合分组标示差异，便于判断解析是否已传播。
+              支持 A / AAAA / MX / TXT / NS / CNAME / CAA。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>domain</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名，例如 example.com；也支持 <code>/v1/dnsprop?domain=example.com&amp;type=A</code>。</td></tr>
+                <tr><td><code>type</code></td><td class="type-cell">query</td><td class="type-cell">string</td><td>记录类型，默认 A，可选 AAAA、MX、TXT、NS、CNAME、CAA。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/dnsprop/example.com?type=A' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "domain": "example.com",
+    "type": "A",
+    "consistent": true,
+    "successful": 4,
+    "failed": 0,
+    "resolvers": [
+      { "name": "阿里 DNS", "address": "223.5.5.5", "status": "ok", "records": ["93.184.216.34"], "durationMs": 28 },
+      { "name": "Cloudflare", "address": "1.1.1.1", "status": "ok", "records": ["93.184.216.34"], "durationMs": 41 }
+    ],
+    "differences": [],
+    "note": "四个公共递归解析器并发查询…",
+    "cached": false
+  },
+  "meta": { "requestId": "req-5", "source": "dns-propagation", "durationMs": 88, "cached": false }
+}</pre>
+            <p class="endpoint-desc">说明：单路超时或不支持该记录类型时按失败记录，不影响其他解析器；结果缓存 60 秒。</p>
+          </article>
+
+          <article class="endpoint-card" id="health-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/health/{domain}</code>
+            </div>
+            <h2>域名健康评分</h2>
+            <p class="endpoint-desc">
+              从注册与所有权、DNS 解析、HTTPS 证书、邮件安全四个维度各 25 分聚合为 0–100 健康评分，
+              输出 A+ 至 E 等级与可直接执行的改进项。任一上游暂时不可用只影响对应维度。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>domain</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名，例如 example.com；也支持 <code>/v1/health?domain=example.com</code>。</td></tr>
+                <tr><td><code>refresh</code></td><td class="type-cell">query</td><td class="type-cell">boolean</td><td>传 <code>1</code> 强制重新评分并绕过缓存，默认 false。</td></tr>
+                <tr><td><code>dimensions</code></td><td class="type-cell">query</td><td class="type-cell">string</td><td>只评估指定维度，逗号分隔：<code>registration</code>、<code>dns</code>、<code>tls</code>、<code>mail</code>。未选维度不发起上游请求，分数按所选维度归一化为 0–100。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/health/example.com?dimensions=dns,tls' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "domain": "example.com",
+    "score": 84,
+    "grade": "A",
+    "summary": "整体健康，建议补齐 DNSSEC",
+    "dimensions": [
+      { "key": "registration", "label": "注册与所有权", "score": 21, "max": 25, "status": "pass", "checks": [] },
+      { "key": "dns", "label": "DNS 解析", "score": 23, "max": 25, "status": "pass", "checks": [] },
+      { "key": "tls", "label": "HTTPS 证书", "score": 25, "max": 25, "status": "pass", "checks": [] },
+      { "key": "mail", "label": "邮件安全", "score": 15, "max": 25, "status": "warn", "checks": [] }
+    ],
+    "issues": [{ "label": "DNSSEC", "status": "warn", "detail": "域名未签名 DNSSEC" }],
+    "note": "评分基于公开注册、DNS、TLS 与邮件记录…",
+    "cached": false
+  },
+  "meta": { "requestId": "req-6", "source": "health-score", "durationMs": 940, "cached": false }
+}</pre>
+            <p class="endpoint-desc">说明：评分用于快速体检，不替代人工安全审计；结果缓存 10 分钟。</p>
+          </article>
+
+          <article class="endpoint-card" id="available-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/available?domains=example.com,example.net</code>
+            </div>
+            <h2>批量可注册检测</h2>
+            <p class="endpoint-desc">
+              一次检测最多 10 个域名，优先查询注册局 RDAP，未覆盖时自动回退 WHOIS 43。
+              支持逗号、分号或空格分隔，自动去重并返回每个域名的可注册状态、注册商与到期时间。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>domains</code></td><td class="type-cell">query</td><td class="type-cell">string</td><td>1–10 个域名，逗号、分号或空格分隔；也支持 <code>/v1/available/{domains}</code> 路径形式。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/available?domains=example.com,example.net' \
+  -H 'accept: application/json'</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "total": 2,
+    "available": 1,
+    "registered": 1,
+    "unknown": 0,
+    "truncated": 0,
+    "durationMs": 620,
+    "items": [
+      { "domain": "example.com", "status": "registered", "source": "rdap", "registrar": "RESERVED-Internet Assigned Numbers Authority", "expires": null },
+      { "domain": "example.net", "status": "registered", "source": "rdap", "registrar": "RESERVED-Internet Assigned Numbers Authority", "expires": null }
+    ],
+    "note": "可注册结论基于注册局 RDAP 与 WHOIS…",
+    "cached": false
+  },
+  "meta": { "requestId": "req-7", "source": "availability", "durationMs": 640, "cached": false }
+}</pre>
+            <p class="endpoint-desc">说明：并发上限 3；可注册状态使用较短缓存，避免返回过期结论。</p>
+          </article>
+
+          <article class="endpoint-card" id="certchain-guide">
+            <div class="endpoint-head">
+              <span class="method get">GET</span>
+              <code class="endpoint-path">/v1/tls/{host}/chain?format=json</code>
+            </div>
+            <h2>TLS 证书链导出</h2>
+            <p class="endpoint-desc">
+              按服务器返回顺序列出完整证书链，包含每一级主体、颁发者、有效期、SHA-256 指纹与 PEM，
+              并合并为可直接下载的 PEM 文件，用于排查证书链缺失与顺序问题。
+            </p>
+            <table class="param-table">
+              <thead><tr><th>参数</th><th>位置</th><th>类型</th><th>说明</th></tr></thead>
+              <tbody>
+                <tr><td><code>host</code></td><td class="type-cell">path</td><td class="type-cell">string</td><td>域名，例如 example.com；也支持 <code>/v1/certchain?host=example.com</code>。</td></tr>
+                <tr><td><code>port</code></td><td class="type-cell">query</td><td class="type-cell">integer</td><td>端口 1–65535，默认 443。</td></tr>
+                <tr><td><code>format</code></td><td class="type-cell">query</td><td class="type-cell">string</td><td><code>json</code>（默认）返回结构化链；<code>pem</code> 直接返回 <code>application/x-pem-file</code>。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block">curl 'https://pull-whois.asoe.cn/v1/tls/example.com/chain' \
+  -H 'accept: application/json'
+
+# 直接下载 PEM
+curl 'https://pull-whois.asoe.cn/v1/tls/example.com/chain?format=pem' -o example-chain.pem</pre>
+            <pre class="code-block">{
+  "success": true,
+  "data": {
+    "host": "example.com",
+    "port": 443,
+    "address": "93.184.216.34",
+    "count": 3,
+    "chain": [
+      {
+        "index": 0,
+        "subject": "CN=example.com",
+        "issuer": "CN=DigiCert Global G2 TLS RSA SHA256 2020 CA1",
+        "validFrom": "2026-09-26T00:00:00.000Z",
+        "validTo": "2027-03-25T23:59:59.000Z",
+        "fingerprint256": "85:CA:...:7A",
+        "selfSigned": false,
+        "pem": "-----BEGIN CERTIFICATE-----\\n…\\n-----END CERTIFICATE-----"
+      }
+    ],
+    "pem": "-----BEGIN CERTIFICATE-----\\n…\\n-----END CERTIFICATE-----",
+    "note": "证书链由本站直接与目标端口握手获取…",
+    "cached": false
+  },
+  "meta": { "requestId": "req-8", "source": "cert-chain", "durationMs": 230, "cached": false }
+}</pre>
+            <p class="endpoint-desc">说明：结果缓存 30 分钟；<code>format=pem</code> 时响应体为纯 PEM 文本，不带 JSON 包装。</p>
+          </article>
+        </section>
+
+        <div id="endpoints"></div>
+
+        <section id="errors">
+          <h2 class="docs-section-title">错误处理</h2>
+          <div class="endpoint-card">
+            <p class="endpoint-desc">
+              所有失败响应都使用统一结构，HTTP 状态码与 <code>error.code</code> 同时表达语义。批量接口中单个域名失败不会影响其他结果。
+            </p>
+            <table class="param-table">
+              <thead>
+                <tr><th>状态码</th><th>error.code</th><th>说明</th></tr>
+              </thead>
+              <tbody>
+                <tr><td class="type-cell">400</td><td><code>INVALID_DOMAIN</code></td><td>域名格式不合法，例如缺少后缀、包含非法字符或为 IP 地址。</td></tr>
+                <tr><td class="type-cell">400</td><td><code>BAD_REQUEST</code></td><td>查询参数或请求体不合法。</td></tr>
+                <tr><td class="type-cell">401</td><td><code>UNAUTHORIZED</code></td><td>服务开启 API Key 校验但未提供有效 Key。</td></tr>
+                <tr><td class="type-cell">401</td><td><code>KEY_DISABLED</code></td><td>密钥已被管理员停用。</td></tr>
+                <tr><td class="type-cell">401</td><td><code>KEY_EXPIRED</code></td><td>密钥已超过有效期。</td></tr>
+                <tr><td class="type-cell">403</td><td><code>KEY_QUOTA_EXCEEDED</code></td><td>密钥累计调用次数已达配额，可在后台重置用量。</td></tr>
+                <tr><td class="type-cell">403</td><td><code>KEY_SCOPE_DENIED</code></td><td>该密钥未被授权调用当前功能接口。</td></tr>
+                <tr><td class="type-cell">403</td><td><code>KEY_IP_DENIED</code></td><td>请求来源 IP 不在密钥白名单内。</td></tr>
+                <tr><td class="type-cell">404</td><td><code>NOT_FOUND</code></td><td>接口路径不存在。</td></tr>
+                <tr><td class="type-cell">429</td><td><code>RATE_LIMITED</code></td><td>触发限流，参考 <code>Retry-After</code> 响应头。ICP 备案接口在公共数据源冷却时也会返回，<code>details.retryAfterSec</code> 给出建议等待秒数。</td></tr>
+                <tr><td class="type-cell">429</td><td><code>WEB_QUOTA_EXCEEDED</code></td><td>网页端每个 IP 的每日查询额度已用完，<code>Retry-After</code> 给出重置等待秒数；使用 API Key 不受该额度限制。</td></tr>
+                <tr><td class="type-cell">502</td><td><code>UPSTREAM_UNAVAILABLE</code></td><td>上游数据源无法返回结果，<code>details.attempts</code> 包含每次尝试。</td></tr>
+                <tr><td class="type-cell">503</td><td><code>WEB_DISABLED</code></td><td>网页端查询已被管理员关闭（仅影响 <code>/web/v1/*</code>）。</td></tr>
+                <tr><td class="type-cell">503</td><td><code>FEATURE_DISABLED</code></td><td>对应工具功能已被管理员关闭。</td></tr>
+                <tr><td class="type-cell">504</td><td><code>UPSTREAM_TIMEOUT</code></td><td>注册局接口超时。</td></tr>
+                <tr><td class="type-cell">500</td><td><code>INTERNAL</code></td><td>未预期的服务端错误。</td></tr>
+              </tbody>
+            </table>
+            <pre class="code-block" style="margin-top: 16px">{
+  "success": false,
+  "error": {
+    "code": "INVALID_DOMAIN",
+    "message": "请输入完整域名（包含后缀），例如 example.com"
+  },
+  "meta": { "requestId": "req-4" }
+}</pre>
+          </div>
+        </section>
+
+        <h2 class="docs-section-title" id="models">数据模型</h2>
+        <div class="schema-grid" id="schemas"></div>
+      </div>
+    </main>
+
+    <footer class="footer shell">
+      <div class="footer-left">
+        <span class="footer-brand">Pull WHOIS</span>
+        <span>v1.1.1</span>
+        <span>GPL-3.0 License</span>
+      </div>
+      <div class="footer-links">
+        <a href="/">查询界面</a>
+        <a href="/openapi.json">OpenAPI</a>
+        <a href="/health">健康检查</a>
+        <a href="/admin">管理后台</a>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/docs.js" type="module"></script>
+  </body>
+</html>

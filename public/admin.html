@@ -1,0 +1,537 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>管理后台 — Pull WHOIS</title>
+    <meta name="robots" content="noindex,nofollow" />
+    <meta name="theme-color" content="#07080a" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/logo-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
+    <link rel="apple-touch-icon" href="/logo-light.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/admin.css" />
+  </head>
+  <body class="admin-body">
+    <a class="skip-link" href="#adminMain">跳到主要内容</a>
+
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <a class="brand" href="/" aria-label="Pull WHOIS 首页">
+          <img class="brand-mark brand-mark-dark" src="/logo.svg" alt="" width="32" height="32" />
+          <img class="brand-mark brand-mark-light" src="/logo-light.svg" alt="" width="32" height="32" />
+          <span class="brand-text">Pull <em>WHOIS</em></span>
+        </a>
+        <nav class="nav" aria-label="主导航">
+          <a href="/">查询界面</a>
+          <a href="/docs">API 文档</a>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换明暗主题">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main class="admin-main shell" id="adminMain">
+      <section class="admin-loading" id="loadingView">
+        <span class="spinner" aria-hidden="true"></span>
+        <p>正在加载管理后台…</p>
+      </section>
+
+      <section class="admin-auth" id="loginView" hidden>
+        <div class="admin-auth-card">
+          <p class="admin-eyebrow">ADMIN CONSOLE</p>
+          <h1>管理后台</h1>
+          <p class="admin-lead">登录后可分别控制网页端查询与 API Key 策略，并管理访问令牌。</p>
+
+          <form id="loginForm" class="admin-form" autocomplete="off">
+            <label class="admin-label" for="adminUsername">管理员账号</label>
+            <input
+              class="admin-input"
+              id="adminUsername"
+              name="username"
+              type="text"
+              placeholder="输入管理员账号"
+              autocomplete="username"
+              autocapitalize="off"
+              spellcheck="false"
+              required
+            />
+
+            <label class="admin-label" for="adminPassword">管理员密码</label>
+            <div class="admin-input-row">
+              <input
+                class="admin-input"
+                id="adminPassword"
+                name="password"
+                type="password"
+                placeholder="输入管理员密码"
+                autocomplete="current-password"
+                required
+              />
+              <button class="btn btn-primary" type="submit" id="loginButton">登录</button>
+            </div>
+            <p class="admin-error" id="loginError" role="alert" hidden></p>
+          </form>
+
+          <p class="admin-hint">
+            账号密码使用 scrypt 加盐哈希保存在服务端，登录会话 12 小时，存放在 HttpOnly Cookie
+            中，可在登录后修改账号与密码。
+          </p>
+        </div>
+      </section>
+
+      <section class="admin-disabled" id="disabledView" hidden>
+        <div class="admin-auth-card">
+          <p class="admin-eyebrow">ADMIN CONSOLE</p>
+          <h1>管理后台未启用</h1>
+          <p class="admin-lead">
+            服务端尚未初始化管理员凭据，因此管理接口已关闭。
+          </p>
+          <p class="admin-hint">
+            在 <code>.env</code> 中设置 <code>ADMIN_USERNAME</code> 与
+            <code>ADMIN_PASSWORD</code>，然后重启服务即可使用；首次启动会写入
+            <code>data/admin.json</code>（仅保存 scrypt 摘要）。
+          </p>
+          <a class="btn btn-ghost" href="/">返回查询界面</a>
+        </div>
+      </section>
+
+      <section id="dashboardView" hidden>
+        <div class="admin-head">
+          <div>
+            <p class="admin-eyebrow">ADMIN CONSOLE</p>
+            <h1>控制台</h1>
+            <p class="admin-lead">
+              当前账号 <code id="currentUser">—</code>。网页端查询与 API Key 策略相互独立，可分别开关。
+            </p>
+          </div>
+          <div class="admin-head-actions">
+            <button class="btn btn-ghost" type="button" id="refreshButton">刷新</button>
+            <button class="btn btn-ghost" type="button" id="logoutButton">退出登录</button>
+          </div>
+        </div>
+
+        <div class="admin-stats" id="statsGrid">
+          <article class="admin-stat">
+            <span class="admin-stat-label">网页端查询</span>
+            <strong class="admin-stat-value" id="statWeb">—</strong>
+            <span class="admin-stat-foot" id="statWebHint">—</span>
+          </article>
+          <article class="admin-stat">
+            <span class="admin-stat-label">API 鉴权</span>
+            <strong class="admin-stat-value" id="statPolicy">—</strong>
+            <span class="admin-stat-foot" id="statPolicyHint">—</span>
+          </article>
+          <article class="admin-stat">
+            <span class="admin-stat-label">密钥总数</span>
+            <strong class="admin-stat-value" id="statKeys">—</strong>
+            <span class="admin-stat-foot">由后台创建</span>
+          </article>
+          <article class="admin-stat">
+            <span class="admin-stat-label">启用中</span>
+            <strong class="admin-stat-value" id="statActive">—</strong>
+            <span class="admin-stat-foot">可正常调用</span>
+          </article>
+          <article class="admin-stat">
+            <span class="admin-stat-label">环境变量 Key</span>
+            <strong class="admin-stat-value" id="statEnv">—</strong>
+            <span class="admin-stat-foot">来自 API_KEYS</span>
+          </article>
+        </div>
+
+        <article class="admin-card admin-policy">
+          <div class="admin-policy-row">
+            <div class="admin-policy-copy">
+              <h2>网页端查询</h2>
+              <p>
+                关闭后，站点首页与 <code>/web/v1/*</code> 将返回 503
+                <code>WEB_DISABLED</code>，不影响 API。
+              </p>
+              <div class="admin-policy-state">
+                <span class="pill" id="webPill">读取中…</span>
+                <span class="admin-muted" id="webNote"></span>
+              </div>
+            </div>
+            <button
+              class="switch"
+              id="webSwitch"
+              type="button"
+              role="switch"
+              aria-checked="true"
+              aria-label="切换网页端查询"
+            >
+              <span class="switch-thumb"></span>
+            </button>
+          </div>
+
+          <div class="admin-policy-row">
+            <div class="admin-policy-copy">
+              <h2>API 是否需要 Key</h2>
+              <p>
+                开启后，所有 <code>/v1/</code> 查询必须携带有效令牌；关闭后允许匿名访问。
+              </p>
+              <div class="admin-policy-state">
+                <span class="pill" id="policyPill">读取中…</span>
+                <span class="admin-muted" id="policyNote"></span>
+              </div>
+            </div>
+            <button
+              class="switch"
+              id="requireKeySwitch"
+              type="button"
+              role="switch"
+              aria-checked="false"
+              aria-label="切换 API 是否需要 Key"
+            >
+              <span class="switch-thumb"></span>
+            </button>
+          </div>
+        </article>
+
+        <article class="admin-card" id="webPolicyCard">
+          <div class="admin-card-head">
+            <div>
+              <h2>网页端限流、额度与风控</h2>
+              <p>
+                仅作用于无需 API Key 的 <code>/web/v1/*</code> 与首页查询。修改后立即生效，计数在重启后归零。
+              </p>
+            </div>
+            <span class="pill" id="webPolicyPill">—</span>
+          </div>
+          <div class="admin-web-policy">
+            <label class="admin-field">
+              <span>窗口请求上限</span>
+              <input id="webRateLimit" type="number" min="0" max="10000" step="1" inputmode="numeric" />
+              <small>0 表示不限制</small>
+            </label>
+            <label class="admin-field">
+              <span>限流窗口（秒）</span>
+              <input id="webRateWindow" type="number" min="5" max="86400" step="1" inputmode="numeric" />
+              <small>统计窗口长度</small>
+            </label>
+            <label class="admin-field">
+              <span>每日每 IP 额度</span>
+              <input id="webDailyQuota" type="number" min="0" max="1000000" step="1" inputmode="numeric" />
+              <small>0 表示不限制</small>
+            </label>
+            <label class="admin-field">
+              <span>违规封禁阈值</span>
+              <input id="webBlockAfter" type="number" min="0" max="1000" step="1" inputmode="numeric" />
+              <small>累计多少次后封禁，0 不封禁</small>
+            </label>
+            <label class="admin-field">
+              <span>封禁时长（秒）</span>
+              <input id="webBlockSec" type="number" min="0" max="86400" step="1" inputmode="numeric" />
+              <small>0 表示不封禁</small>
+            </label>
+          </div>
+          <div class="admin-policy-actions">
+            <button class="btn btn-primary" type="button" id="webPolicySave">保存策略</button>
+            <span class="admin-muted" id="webPolicyHint">超限返回 429，并可通过 Retry-After 获取等待时间。</span>
+          </div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>工具功能开关</h2>
+              <p>
+                关闭后，对应工具在网页端与 API 均返回 503
+                <code>FEATURE_DISABLED</code>；开关即时生效。
+              </p>
+            </div>
+            <span class="admin-count" id="featureCount">—</span>
+          </div>
+          <div class="admin-features" id="featureGrid"></div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>运行指标</h2>
+              <p>进程内轻量统计，用于观察流量与缓存命中情况，重启后归零。</p>
+            </div>
+            <span class="pill" id="statsUptime">—</span>
+          </div>
+          <div class="admin-metrics" id="metricsGrid">
+            <div class="admin-metric"><span>加载中…</span><strong>—</strong><small>—</small></div>
+          </div>
+          <div class="admin-split">
+            <section>
+              <h3 class="admin-subtitle">最近查询</h3>
+              <div class="admin-list" id="recentQueries">
+                <p class="admin-muted">暂无记录</p>
+              </div>
+            </section>
+            <section>
+              <h3 class="admin-subtitle">热门目标</h3>
+              <div class="admin-list" id="topTargets">
+                <p class="admin-muted">暂无记录</p>
+              </div>
+            </section>
+          </div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>注册商目录</h2>
+              <p>
+                合并 IANA Registrar IDs 与 ICANN 认证注册商列表，每日自动同步；查询直接读取本地快照。
+              </p>
+            </div>
+            <button class="btn btn-ghost" type="button" id="registrarRefreshButton">立即同步</button>
+          </div>
+          <div class="admin-metrics" id="registrarStats">
+            <div class="admin-metric"><span>加载中…</span><strong>—</strong><small>—</small></div>
+          </div>
+          <p class="admin-hint" id="registrarNote">目录每日自动同步；查询直接读取本地快照，不产生外部请求。</p>
+        </article>
+
+        <article class="admin-card" id="schedulerCard">
+          <div class="admin-card-head">
+            <div>
+              <h2>智能调度</h2>
+              <p>
+                在请求空闲、事件循环延迟较低时执行缓存整理、备案缓存压缩与本地数据落盘，避免与线上查询争抢 CPU 和网络。
+              </p>
+            </div>
+            <span class="pill" id="schedulerPill">—</span>
+          </div>
+          <div class="admin-scheduler-toggles">
+            <div class="admin-toggle-line">
+              <span>启用自动调度</span>
+              <button
+                class="switch"
+                id="schedulerEnabled"
+                type="button"
+                role="switch"
+                aria-checked="true"
+                aria-label="切换自动调度"
+              >
+                <span class="switch-thumb"></span>
+              </button>
+            </div>
+            <div class="admin-toggle-line">
+              <span>仅在空闲时执行</span>
+              <button
+                class="switch"
+                id="schedulerIdleOnly"
+                type="button"
+                role="switch"
+                aria-checked="true"
+                aria-label="切换仅在空闲时执行"
+              >
+                <span class="switch-thumb"></span>
+              </button>
+            </div>
+            <button class="btn btn-ghost" type="button" id="schedulerRunAll">立即运行全部</button>
+          </div>
+          <div class="admin-list admin-scheduler-jobs" id="schedulerJobs">
+            <p class="admin-muted">加载中…</p>
+          </div>
+          <p class="admin-hint" id="schedulerHint">
+            空闲判断基于当前在途请求与事件循环延迟；任务在重启后重新计时，不会产生外部压力。
+          </p>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>运维操作</h2>
+              <p>清理内存缓存与本地数据，或让所有后台会话立即失效。</p>
+            </div>
+          </div>
+          <div class="admin-ops">
+            <button class="btn btn-ghost" type="button" id="clearCacheButton">清空查询缓存</button>
+            <button class="btn btn-ghost" type="button" id="clearHistoryButton">清空历史快照</button>
+            <button class="btn btn-ghost" type="button" id="clearIndexButton">清空本地索引</button>
+            <button class="btn btn-ghost admin-danger-btn" type="button" id="revokeSessionsButton">
+              使全部会话失效
+            </button>
+          </div>
+          <p class="admin-hint">
+            缓存清空不影响管理配置；历史快照与本地索引清空后不可恢复。会话失效会同时退出当前登录。
+          </p>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>创建新密钥</h2>
+              <p>密钥明文只显示一次，服务端仅保存 SHA-256 摘要。</p>
+            </div>
+          </div>
+          <form class="admin-create" id="createForm" autocomplete="off">
+            <div class="admin-create-row">
+              <input
+                class="admin-input"
+                id="keyName"
+                name="name"
+                type="text"
+                maxlength="64"
+                placeholder="名称，例如：生产环境 / 合作方 A"
+              />
+              <button class="btn btn-primary" type="submit" id="createButton">生成密钥</button>
+            </div>
+            <details class="key-advanced">
+              <summary>高级策略：有效期、配额、限速、作用域与 IP 白名单</summary>
+              <div class="key-policy-grid">
+                <label class="key-field">
+                  <span>有效期（天）</span>
+                  <input class="admin-input" id="keyExpiry" type="number" min="1" max="3650" placeholder="留空永久" />
+                </label>
+                <label class="key-field">
+                  <span>总配额（次）</span>
+                  <input class="admin-input" id="keyQuota" type="number" min="1" max="1000000000" placeholder="留空不限" />
+                </label>
+                <label class="key-field">
+                  <span>每分钟限速</span>
+                  <input class="admin-input" id="keyRate" type="number" min="1" max="1000000" placeholder="默认 600" />
+                </label>
+                <label class="key-field key-field-wide">
+                  <span>IP 白名单（逗号分隔，支持 CIDR）</span>
+                  <input class="admin-input" id="keyIps" type="text" maxlength="600" placeholder="203.0.113.0/24, 2001:db8::/32" />
+                </label>
+                <label class="key-field key-field-wide">
+                  <span>备注</span>
+                  <input class="admin-input" id="keyNote" type="text" maxlength="200" placeholder="用途、负责人或到期提醒" />
+                </label>
+              </div>
+              <div class="key-scopes" id="keyScopePicker"></div>
+              <p class="admin-hint">作用域默认全部功能；每个功能拥有独立接口，可精确授权到指定接口。</p>
+            </details>
+          </form>
+          <p class="admin-error" id="createError" role="alert" hidden></p>
+        </article>
+
+        <article class="admin-card admin-token-card" id="tokenCard" hidden>
+          <div class="admin-card-head">
+            <div>
+              <h2>请立即保存密钥</h2>
+              <p>关闭后将无法再次查看完整密钥，只能重新生成。</p>
+            </div>
+            <span class="pill pill-warn">仅显示一次</span>
+          </div>
+          <div class="admin-token-box">
+            <code id="tokenValue"></code>
+            <button class="btn btn-ghost" type="button" id="copyTokenButton">复制</button>
+          </div>
+          <p class="admin-hint" id="tokenHint"></p>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>密钥列表</h2>
+              <p>停用后立即失效；删除不可恢复。</p>
+            </div>
+            <span class="admin-count" id="keyCount">0 个</span>
+          </div>
+          <div class="admin-keys" id="keyList"></div>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>账号与密码</h2>
+              <p>修改后所有登录会话立即失效，需要使用新账号重新登录。</p>
+            </div>
+          </div>
+          <form class="admin-form admin-credentials" id="credentialsForm" autocomplete="off">
+            <div class="admin-field">
+              <label class="admin-label" for="currentPassword">当前密码</label>
+              <input
+                class="admin-input"
+                id="currentPassword"
+                name="currentPassword"
+                type="password"
+                autocomplete="current-password"
+                required
+              />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="newUsername">新账号</label>
+              <input
+                class="admin-input"
+                id="newUsername"
+                name="username"
+                type="text"
+                minlength="3"
+                maxlength="32"
+                autocomplete="username"
+                autocapitalize="off"
+                spellcheck="false"
+                placeholder="3-32 位字母、数字、_ . -"
+                required
+              />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="newPassword">新密码</label>
+              <input
+                class="admin-input"
+                id="newPassword"
+                name="password"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                placeholder="至少 8 位"
+                required
+              />
+            </div>
+            <div class="admin-field">
+              <label class="admin-label" for="confirmPassword">确认新密码</label>
+              <input
+                class="admin-input"
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                minlength="8"
+                maxlength="128"
+                autocomplete="new-password"
+                required
+              />
+            </div>
+            <div class="admin-credentials-actions">
+              <button class="btn btn-primary" type="submit" id="credentialsButton">保存修改</button>
+            </div>
+          </form>
+          <p class="admin-error" id="credentialsError" role="alert" hidden></p>
+        </article>
+
+        <article class="admin-card">
+          <div class="admin-card-head">
+            <div>
+              <h2>调用示例</h2>
+              <p id="usageNote">在请求头中携带密钥即可调用。</p>
+            </div>
+            <button class="btn btn-ghost" type="button" id="copyCurlButton">复制 cURL</button>
+          </div>
+          <pre class="admin-code" id="usageCode"></pre>
+        </article>
+      </section>
+    </main>
+
+    <div class="toast" id="toast" role="status" aria-live="polite" hidden></div>
+
+    <script src="/admin.js" defer></script>
+  </body>
+</html>

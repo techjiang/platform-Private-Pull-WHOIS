@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.env
+data
+*.log
+test
+smoke*.ts
+smoke*.txt
+.vscode
+.trae

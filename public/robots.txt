@@ -1,0 +1,9 @@
+User-agent: *
+Allow: /
+Allow: /docs
+Disallow: /admin
+Disallow: /admin/
+Disallow: /v1/
+Disallow: /web/v1/
+
+Sitemap: https://pull-whois.asoe.cn/sitemap.xml

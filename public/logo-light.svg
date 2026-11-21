@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" fill="none" role="img" aria-label="Pull WHOIS">
+  <defs>
+    <linearGradient id="pw-logo-g-light" x1="9" y1="7" x2="55" y2="58" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f6b52" />
+      <stop offset="0.52" stop-color="#0d8a68" />
+      <stop offset="1" stop-color="#0b7268" />
+    </linearGradient>
+    <linearGradient id="pw-logo-p-light" x1="24" y1="19" x2="40" y2="47" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#14523f" />
+      <stop offset="1" stop-color="#075e46" />
+    </linearGradient>
+  </defs>
+  <path
+    d="M32 4.8c15 0 27.2 12.2 27.2 27.2S47 59.2 32 59.2 4.8 47 4.8 32 17 4.8 32 4.8Z"
+    stroke="url(#pw-logo-g-light)"
+    stroke-width="2.2"
+    opacity="0.55"
+  />
+  <path
+    d="M32 10.4c11.9 0 21.6 9.7 21.6 21.6S43.9 53.6 32 53.6"
+    stroke="url(#pw-logo-g-light)"
+    stroke-width="3.4"
+    stroke-linecap="round"
+  />
+  <path
+    d="M22.4 45.6V18.8h10.9c6.9 0 11.4 3.9 11.4 10.2 0 6.4-4.5 10.5-11.6 10.5h-4.2v6.1h-6.5Zm6.5-10.9h4c3.2 0 5-1.5 5-4.6 0-3-1.8-4.6-5-4.6h-4v9.2Z"
+    fill="url(#pw-logo-p-light)"
+  />
+  <circle cx="50.6" cy="16.4" r="3.2" fill="#6aa62e" />
+</svg>

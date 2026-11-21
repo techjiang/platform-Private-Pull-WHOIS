@@ -1,0 +1,446 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Pull WHOIS — 域名 WHOIS、RDAP、DNS、证书、健康评分与安全体检 API</title>
+    <meta
+      name="description"
+      content="Pull WHOIS 是轻量、生产级的域名情报 API：WHOIS、RDAP、DNS 记录与传播对比、IP 归属、域名历史、可用性、批量可注册检测、名称服务器反查、注册商目录、ICP 备案、TLS 证书与证书链、HTTP 安全头体检、域名健康评分与邮件安全，结构化 JSON 开箱即用。"
+    />
+    <meta
+      name="keywords"
+      content="WHOIS查询,RDAP查询,DNS记录查询,DNS传播检测,IP地址查询,域名历史,网站可用性检查,域名可注册查询,名称服务器反查,注册商目录,ICP备案查询,TLS证书查询,SSL证书链,HTTP安全头检测,域名健康评分,SPF查询,DMARC查询,DKIM查询,域名API"
+    />
+    <meta name="robots" content="index,follow,max-image-preview:large" />
+    <meta name="author" content="Pull WHOIS" />
+    <meta name="theme-color" content="#07080a" />
+    <link rel="canonical" href="https://pull-whois.asoe.cn/" />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Pull WHOIS" />
+    <meta property="og:url" content="https://pull-whois.asoe.cn/" />
+    <meta property="og:locale" content="zh_CN" />
+    <meta property="og:title" content="Pull WHOIS — 域名情报与安全体检 API" />
+    <meta
+      property="og:description"
+      content="一个接口搞定域名情报：WHOIS、RDAP、DNS、IP、历史、可用性、批量可注册、NS 反查、注册商、ICP 备案、TLS 证书与证书链、HTTP 安全头、健康评分与邮件安全。"
+    />
+    <meta property="og:image" content="https://pull-whois.asoe.cn/logo.svg" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Pull WHOIS — 域名情报查询 API" />
+    <meta
+      name="twitter:description"
+      content="WHOIS / RDAP / DNS / IP / 历史 / 可用性 / 批量可注册 / NS 反查 / 注册商 / ICP 备案 / TLS 证书链 / HTTP 安全头 / 健康评分 / 邮件安全，结构化 JSON 即取即用。"
+    />
+    <meta name="twitter:image" content="https://pull-whois.asoe.cn/logo.svg" />
+    <link rel="icon" href="/logo.svg" type="image/svg+xml" media="(prefers-color-scheme: dark)" />
+    <link rel="icon" href="/logo-light.svg" type="image/svg+xml" media="(prefers-color-scheme: light)" />
+    <link rel="apple-touch-icon" href="/logo-light.svg" />
+    <link rel="stylesheet" href="/styles.css" />
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@graph": [
+          {
+            "@type": "WebSite",
+            "@id": "https://pull-whois.asoe.cn/#website",
+            "url": "https://pull-whois.asoe.cn/",
+            "name": "Pull WHOIS",
+            "description": "轻量、生产级的域名情报查询服务：WHOIS、RDAP、DNS、IP、域名历史、可用性、名称服务器反查、注册商目录、ICP 备案、TLS 证书与邮件安全。",
+            "inLanguage": "zh-CN",
+            "potentialAction": {
+              "@type": "SearchAction",
+              "target": "https://pull-whois.asoe.cn/?q={search_term_string}",
+              "query-input": "required name=search_term_string"
+            }
+          },
+          {
+            "@type": "SoftwareApplication",
+            "name": "Pull WHOIS",
+            "applicationCategory": "DeveloperApplication",
+            "operatingSystem": "Web",
+            "url": "https://pull-whois.asoe.cn/",
+            "description": "提供 WHOIS、RDAP、DNS 记录、IP 归属、域名历史、可用性检查、名称服务器反查、注册商目录、ICP 备案、TLS 证书与邮件安全查询的 JSON API。",
+            "offers": { "@type": "Offer", "price": "0", "priceCurrency": "CNY" }
+          },
+          {
+            "@type": "BreadcrumbList",
+            "itemListElement": [
+              {
+                "@type": "ListItem",
+                "position": 1,
+                "name": "首页",
+                "item": "https://pull-whois.asoe.cn/"
+              },
+              {
+                "@type": "ListItem",
+                "position": 2,
+                "name": "API 文档",
+                "item": "https://pull-whois.asoe.cn/docs"
+              }
+            ]
+          }
+        ]
+      }
+    </script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">跳到主要内容</a>
+
+    <header class="topbar">
+      <div class="shell topbar-inner">
+        <a class="brand" href="/" aria-label="Pull WHOIS 首页">
+          <img class="brand-mark brand-mark-dark" src="/logo.svg" alt="" width="32" height="32" />
+          <img class="brand-mark brand-mark-light" src="/logo-light.svg" alt="" width="32" height="32" />
+          <span class="brand-text">Pull <em>WHOIS</em></span>
+        </a>
+        <nav class="nav" aria-label="主导航">
+          <a href="/docs">API 文档</a>
+          <a href="/openapi.json">OpenAPI</a>
+          <a href="#tools">工具</a>
+          <a href="#features">特性</a>
+          <a href="/admin">管理</a>
+          <button class="theme-toggle" id="themeToggle" type="button" aria-label="切换明暗主题">
+            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M20.5 14.2A8.5 8.5 0 0 1 9.8 3.5a8.5 8.5 0 1 0 10.7 10.7Z"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linejoin="round"
+              />
+            </svg>
+            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.6" />
+              <path
+                d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.2 5.2l1.4 1.4M17.4 17.4l1.4 1.4M18.8 5.2l-1.4 1.4M6.6 17.4l-1.4 1.4"
+                stroke="currentColor"
+                stroke-width="1.6"
+                stroke-linecap="round"
+              />
+            </svg>
+          </button>
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <section class="hero shell">
+        <div class="hero-copy">
+          <p class="eyebrow"><span class="live-dot"></span> DOMAIN INTELLIGENCE · RDAP + WHOIS</p>
+          <h1>域名的每一面，<span class="accent">一次看清。</span></h1>
+          <p class="lede">
+            十六种工具，一个入口：WHOIS、RDAP、DNS 与传播对比、IP 归属、历史、可用性、批量可注册、NS 反查、注册商目录、ICP 备案、TLS 证书与证书链、HTTP 安全体检、健康评分与邮件安全。
+            全部返回结构化 JSON，网页查询无需密钥。
+          </p>
+
+          <div class="tool-switch" id="toolSwitch" role="tablist" aria-label="查询工具">
+            <button type="button" class="tool-tab is-active" data-tool="whois" role="tab" aria-selected="true">WHOIS</button>
+            <button type="button" class="tool-tab" data-tool="rdap" role="tab" aria-selected="false">RDAP</button>
+            <button type="button" class="tool-tab" data-tool="dns" role="tab" aria-selected="false">DNS</button>
+            <button type="button" class="tool-tab" data-tool="ip" role="tab" aria-selected="false">IP</button>
+            <button type="button" class="tool-tab" data-tool="uptime" role="tab" aria-selected="false">可用性</button>
+            <button type="button" class="tool-tab" data-tool="history" role="tab" aria-selected="false">历史</button>
+            <button type="button" class="tool-tab" data-tool="nameservers" role="tab" aria-selected="false">NS 反查</button>
+            <button type="button" class="tool-tab" data-tool="icp" role="tab" aria-selected="false">备案</button>
+            <button type="button" class="tool-tab" data-tool="tls" role="tab" aria-selected="false">证书</button>
+            <button type="button" class="tool-tab" data-tool="mail" role="tab" aria-selected="false">邮件安全</button>
+            <button type="button" class="tool-tab" data-tool="registrars" role="tab" aria-selected="false">注册商</button>
+            <button type="button" class="tool-tab" data-tool="http" role="tab" aria-selected="false">安全体检</button>
+            <button type="button" class="tool-tab" data-tool="dnsprop" role="tab" aria-selected="false">解析传播</button>
+            <button type="button" class="tool-tab" data-tool="health" role="tab" aria-selected="false">健康评分</button>
+            <button type="button" class="tool-tab" data-tool="available" role="tab" aria-selected="false">可注册</button>
+            <button type="button" class="tool-tab" data-tool="certchain" role="tab" aria-selected="false">证书链</button>
+          </div>
+
+          <form class="search" id="searchForm" novalidate>
+            <span class="search-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none">
+                <circle cx="10.5" cy="10.5" r="6.5" stroke="currentColor" stroke-width="1.7" />
+                <path d="m15.4 15.4 4.1 4.1" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+              </svg>
+            </span>
+            <input
+              id="domainInput"
+              name="domain"
+              type="text"
+              inputmode="url"
+              autocomplete="off"
+              autocapitalize="off"
+              spellcheck="false"
+              maxlength="512"
+              placeholder="输入域名，例如 example.com"
+              aria-label="要查询的域名"
+            />
+            <button class="search-btn" id="searchBtn" type="submit">
+              <span>查询</span>
+              <kbd>↵</kbd>
+            </button>
+          </form>
+
+          <div class="tool-options" id="toolOptions" hidden>
+            <label class="tool-option" for="dnsType">
+              <span>记录类型</span>
+              <select id="dnsType" name="dnsType">
+                <option value="A">A</option>
+                <option value="AAAA">AAAA</option>
+                <option value="MX">MX</option>
+                <option value="TXT">TXT</option>
+                <option value="NS">NS</option>
+                <option value="CNAME">CNAME</option>
+                <option value="SOA">SOA</option>
+                <option value="SRV">SRV</option>
+                <option value="CAA">CAA</option>
+                <option value="ANY">ANY（全部）</option>
+              </select>
+            </label>
+            <span class="tool-option-note" id="toolOptionNote">选择要查询的 DNS 记录类型</span>
+          </div>
+
+          <div class="tool-options" id="dnsPropOptions" hidden>
+            <label class="tool-option" for="dnsPropType">
+              <span>记录类型</span>
+              <select id="dnsPropType" name="dnsPropType">
+                <option value="A">A</option>
+                <option value="AAAA">AAAA</option>
+                <option value="MX">MX</option>
+                <option value="TXT">TXT</option>
+                <option value="NS">NS</option>
+                <option value="CNAME">CNAME</option>
+                <option value="CAA">CAA</option>
+              </select>
+            </label>
+            <span class="tool-option-note" id="dnsPropOptionNote">同时对比阿里 DNS、DNSPod、Cloudflare 与 Google DNS</span>
+          </div>
+
+          <div class="chips" aria-label="示例输入">
+            <span class="chips-label">试试</span>
+            <button type="button" class="chip" data-domain="example.com">example.com</button>
+            <button type="button" class="chip" data-domain="github.io">github.io</button>
+            <button type="button" class="chip" data-domain="google.co.uk">google.co.uk</button>
+            <button type="button" class="chip" data-domain="denic.de">denic.de</button>
+            <button type="button" class="chip" data-domain="münich.com">münich.com</button>
+          </div>
+        </div>
+
+        <aside class="hero-code" aria-label="API 调用示例">
+          <div class="code-window">
+            <div class="code-top">
+              <span class="window-dots" aria-hidden="true"><i></i><i></i><i></i></span>
+              <span class="code-path">GET /v1/whois/{domain}</span>
+              <button class="icon-btn" id="copyCurl" type="button" aria-label="复制示例命令">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <rect x="9" y="9" width="11" height="11" rx="2" stroke="currentColor" stroke-width="1.5" />
+                  <path d="M15 6.5V5a2 2 0 0 0-2-2H5a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h1.5" stroke="currentColor" stroke-width="1.5" />
+                </svg>
+              </button>
+            </div>
+            <pre class="code-body"><code><span class="tok-cmd">curl</span> <span class="tok-url" id="curlUrl">/v1/whois/example.com</span> \
+  <span class="tok-flag">-H</span> <span class="tok-str">"accept: application/json"</span></code></pre>
+            <div class="code-foot">
+              <span><span class="live-dot"></span> RDAP + WHOIS 双通道</span>
+              <span>结构化 JSON</span>
+            </div>
+          </div>
+          <div class="hero-code-note">
+            <span>网页查询无需密钥</span>
+            <span>默认 120 次 / 分钟</span>
+            <span>10 分钟缓存</span>
+          </div>
+        </aside>
+      </section>
+
+      <section class="result-section shell" id="lookup">
+        <div id="result" aria-live="polite" aria-busy="false">
+          <div class="idle-card">
+            <div class="idle-grid">
+              <div>
+                <span class="mini-label">灵活输入</span>
+                <p>域名、URL、邮箱中的域名，支持 IDN / punycode</p>
+              </div>
+              <div>
+                <span class="mini-label">统一字段</span>
+                <p>注册商 · 日期 · EPP 状态 · DNS · DNSSEC · 注册人</p>
+              </div>
+              <div>
+                <span class="mini-label">策略独立</span>
+                <p>网页查询与 API 是否需要 Key 由后台分别控制，互不影响</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features shell" id="features">
+        <div class="section-title">
+          <span class="eyebrow">BUILT FOR REAL USE</span>
+          <h2>不只是转发一份 WHOIS 文本</h2>
+        </div>
+        <div class="feature-grid">
+          <article class="feature">
+            <span class="feature-index">01</span>
+            <h3>RDAP 优先</h3>
+            <p>直连注册局 RDAP 接口，字段标准化、解析稳定。IANA 引导文件自动更新，覆盖新 gTLD。</p>
+            <code>source: "rdap"</code>
+          </article>
+          <article class="feature">
+            <span class="feature-index">02</span>
+            <h3>WHOIS 兜底</h3>
+            <p>RDAP 未覆盖的后缀自动切换 43 端口，并智能跟随注册商 referral 合并更完整的数据。</p>
+            <code>source: "whois"</code>
+          </article>
+          <article class="feature">
+            <span class="feature-index">03</span>
+            <h3>生产级细节</h3>
+            <p>TTL + LRU 缓存、并发去重、按 IP / API Key 限流、批量查询，网页端与 API 鉴权策略完全分离。</p>
+            <code>GET /openapi.json</code>
+          </article>
+          <article class="feature">
+            <span class="feature-index">04</span>
+            <h3>零依赖输出</h3>
+            <p>一个请求即可拿到可用的结构化数据，不需要自己解析几百种注册局的文本格式。</p>
+            <code>application/json</code>
+          </article>
+        </div>
+      </section>
+
+      <section class="tool-guide shell" id="tools">
+        <div class="section-title">
+          <span class="eyebrow">SIXTEEN TOOLS · ONE API</span>
+          <h2>十六种域名情报工具</h2>
+        </div>
+        <div class="tool-guide-grid">
+          <article class="guide-card" id="guide-whois">
+            <span class="guide-tag">WHOIS</span>
+            <h3>域名 WHOIS 查询</h3>
+            <p>查询任意域名的注册人、注册商、注册与到期日期、EPP 状态、DNS 服务器和 DNSSEC 状态。</p>
+            <code>GET /v1/whois/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-rdap">
+            <span class="guide-tag">RDAP</span>
+            <h3>RDAP 结构化查询</h3>
+            <p>直连注册局 RDAP 服务，返回现代 WHOIS 继任者的结构化注册数据，字段稳定、易于程序处理。</p>
+            <code>GET /v1/rdap/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-dns">
+            <span class="guide-tag">DNS</span>
+            <h3>DNS 记录查询</h3>
+            <p>查询 A、AAAA、MX、TXT、NS、CNAME、SOA、SRV、CAA 记录，也可一次拉取全部记录。</p>
+            <code>GET /v1/dns/{domain}?type=MX</code>
+          </article>
+          <article class="guide-card" id="guide-ip">
+            <span class="guide-tag">IP</span>
+            <h3>IP 地址归属查询</h3>
+            <p>查询 IPv4 与 IPv6 的 PTR 反向解析、所属网络、组织、国家/地区与注册时间等 RDAP 数据。</p>
+            <code>GET /v1/ip/{address}</code>
+          </article>
+          <article class="guide-card" id="guide-uptime">
+            <span class="guide-tag">UPTIME</span>
+            <h3>网站可用性检查</h3>
+            <p>检查网站当前是否可访问，返回 HTTP 状态、响应延迟、重定向后的最终地址与检查时间。</p>
+            <code>GET /v1/uptime?target=example.com</code>
+          </article>
+          <article class="guide-card" id="guide-history">
+            <span class="guide-tag">HISTORY</span>
+            <h3>域名历史快照</h3>
+            <p>对比注册商、注册人、DNS 服务器与状态变化。数据来自本站查询快照，自功能启用后持续积累。</p>
+            <code>GET /v1/history/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-ns">
+            <span class="guide-tag">NS LOOKUP</span>
+            <h3>名称服务器反查</h3>
+            <p>输入名称服务器，查看本站索引中由它托管解析的域名，并统计注册商分布。</p>
+            <code>GET /v1/nameservers/{host}</code>
+          </article>
+          <article class="guide-card" id="guide-registrars">
+            <span class="guide-tag">REGISTRARS</span>
+            <h3>注册商目录</h3>
+            <p>
+              合并 IANA Registrar IDs 与 ICANN 认证注册商列表，支持按国家与状态筛选，并展示本站索引中关联的域名数量。
+            </p>
+            <code>GET /v1/registrars</code>
+          </article>
+          <article class="guide-card" id="guide-icp">
+            <span class="guide-tag">ICP</span>
+            <h3>ICP 备案查询</h3>
+            <p>
+              查询中国大陆 ICP 备案：网站备案号、主体备案号、主办单位、单位性质与审核时间。结果优先由本站持久化缓存返回，缓存未命中时才回源公开备案数据。
+            </p>
+            <code>GET /v1/icp/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-tls">
+            <span class="guide-tag">TLS</span>
+            <h3>TLS 证书检查</h3>
+            <p>
+              本站直接与目标端口完成 TLS 握手，读取证书颁发者、有效期、SAN、指纹、协议与加密套件。不依赖第三方检测服务。
+            </p>
+            <code>GET /v1/tls/{host}</code>
+          </article>
+          <article class="guide-card" id="guide-mail">
+            <span class="guide-tag">MAIL</span>
+            <h3>邮件安全记录</h3>
+            <p>
+              本站直接查询 DNS 并解析 SPF、DMARC、DKIM 与 MX，逐项给出通过、建议改进或缺失，完全自研解析。
+            </p>
+            <code>GET /v1/mail/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-http">
+            <span class="guide-tag">HTTP</span>
+            <h3>HTTP 安全响应头体检</h3>
+            <p>
+              直连目标站点读取响应头，检查 HSTS、CSP、点击劫持防护、MIME 嗅探、Referrer-Policy、COOP 与 Cookie 安全属性，给出评分与逐项建议。
+            </p>
+            <code>GET /v1/http/{target}</code>
+          </article>
+          <article class="guide-card" id="guide-dnsprop">
+            <span class="guide-tag">PROPAGATION</span>
+            <h3>DNS 多解析器传播对比</h3>
+            <p>
+              同时向阿里 DNS、DNSPod、Cloudflare 与 Google DNS 发起查询，对比解析结果是否一致，快速判断解析是否已经传播完成。
+            </p>
+            <code>GET /v1/dnsprop/{domain}?type=A</code>
+          </article>
+          <article class="guide-card" id="guide-health">
+            <span class="guide-tag">HEALTH</span>
+            <h3>域名健康评分</h3>
+            <p>
+              把注册信息、DNS、HTTPS 证书与邮件安全四个维度各 25 分汇总为 100 分，输出等级、检查项与可执行的改进建议。
+            </p>
+            <code>GET /v1/health/{domain}</code>
+          </article>
+          <article class="guide-card" id="guide-available">
+            <span class="guide-tag">AVAILABILITY</span>
+            <h3>批量可注册查询</h3>
+            <p>
+              一次最多检测 10 个域名，优先查询注册局 RDAP、未覆盖时回退 WHOIS，返回可注册状态、注册商与关键日期。
+            </p>
+            <code>GET /v1/available?domains=a.com,b.net</code>
+          </article>
+          <article class="guide-card" id="guide-certchain">
+            <span class="guide-tag">CERT CHAIN</span>
+            <h3>证书链导出</h3>
+            <p>
+              导出目标端口返回的完整证书链，包含每张证书的主体、颁发者、有效期、SHA-256 指纹与 PEM，可直接用于运维排查。
+            </p>
+            <code>GET /v1/tls/{host}/chain</code>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="footer shell">
+      <div class="footer-left">
+        <span class="footer-brand">Pull WHOIS</span>
+        <span>v1.1.1</span>
+        <span>GPL-3.0 License</span>
+      </div>
+      <div class="footer-links">
+        <a href="/docs">API 文档</a>
+        <a href="/openapi.json">OpenAPI</a>
+        <a href="/health">健康检查</a>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+    <script src="/app.js" type="module"></script>
+  </body>
+</html>
