@@ -32,7 +32,7 @@ const apiKeys = list(process.env.API_KEYS);
 const corsOrigins = list(process.env.CORS_ORIGIN);
 
 export const config = {
-  version: '1.1.9',
+  version: '1.2.0',
   nodeEnv: process.env.NODE_ENV ?? 'development',
   isProduction: process.env.NODE_ENV === 'production',
   host: process.env.HOST ?? '0.0.0.0',
@@ -61,7 +61,7 @@ export const config = {
   },
   dns: {
     ttlMs: num(process.env.DNS_CACHE_TTL_MS, 5 * 60 * 1000),
-    maxEntries: num(process.env.DNS_CACHE_MAX_ENTRIES, 1000),
+    maxEntries: num(process.env.DNS_CACHE_MAX_ENTRIES, 600),
     timeoutMs: num(process.env.DNS_TIMEOUT_MS, 5000),
   },
   ip: {
@@ -75,13 +75,13 @@ export const config = {
   },
   history: {
     dataFile: process.env.HISTORY_DATA_FILE ?? '',
-    maxDomains: num(process.env.HISTORY_MAX_DOMAINS, 1200),
-    maxSnapshots: num(process.env.HISTORY_MAX_SNAPSHOTS, 16),
+    maxDomains: num(process.env.HISTORY_MAX_DOMAINS, 600),
+    maxSnapshots: num(process.env.HISTORY_MAX_SNAPSHOTS, 10),
     minIntervalMs: num(process.env.HISTORY_MIN_INTERVAL_MS, 6 * 60 * 60 * 1000),
   },
   index: {
     dataFile: process.env.INDEX_DATA_FILE ?? '',
-    maxDomains: num(process.env.INDEX_MAX_DOMAINS, 8000),
+    maxDomains: num(process.env.INDEX_MAX_DOMAINS, 5000),
   },
   registrars: {
     dataFile: process.env.REGISTRARS_DATA_FILE ?? '',
@@ -100,7 +100,7 @@ export const config = {
     missTtlMs: num(process.env.ICP_MISS_TTL_MS, 30 * 60 * 1000),
     /** 公共账号全局最小调用间隔（默认 15 秒） */
     cooldownMs: num(process.env.ICP_COOLDOWN_MS, 15000),
-    maxEntries: num(process.env.ICP_CACHE_MAX_ENTRIES, 500),
+    maxEntries: num(process.env.ICP_CACHE_MAX_ENTRIES, 300),
     /** 本地持久化缓存文件，默认 data/icp.json */
     dataFile: process.env.ICP_DATA_FILE ?? '',
     /** 本地缓存可直接返回的有效期（默认 7 天） */
@@ -111,7 +111,7 @@ export const config = {
   tls: {
     timeoutMs: num(process.env.TLS_TIMEOUT_MS, 6000),
     cacheTtlMs: num(process.env.TLS_CACHE_TTL_MS, 30 * 60 * 1000),
-    maxEntries: num(process.env.TLS_CACHE_MAX_ENTRIES, 300),
+    maxEntries: num(process.env.TLS_CACHE_MAX_ENTRIES, 240),
   },
   certChain: {
     cacheTtlMs: num(process.env.CERT_CHAIN_CACHE_TTL_MS, 30 * 60 * 1000),

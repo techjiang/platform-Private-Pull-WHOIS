@@ -6,7 +6,7 @@ import { ApiError } from '../lib/errors.js';
 import { metrics } from '../lib/metrics.js';
 import { historyStore } from '../services/history.js';
 import { domainIndex, INDEX_NOTE } from '../services/index.js';
-import { isDnsType, lookupDns, type DnsQueryType } from '../services/dns.js';
+import { isDnsType, lookupDns, normalizeDnsTypes, type DnsQueryType } from '../services/dns.js';
 import { checkAvailability, AVAILABILITY_NOTE } from '../services/available.js';
 import { fetchCertificateChain, CERT_CHAIN_NOTE } from '../services/certchain.js';
 import { checkDnsPropagation, DNS_PROP_NOTE } from '../services/dnsprop.js';
@@ -156,7 +156,7 @@ const dnsQuerySchema = {
   type: 'object',
   properties: {
     domain: { type: 'string', minLength: 1, maxLength: 512 },
-    type: { type: 'string', minLength: 1, maxLength: 8, default: 'A' },
+    type: { type: 'string', minLength: 1, maxLength: 64, default: 'A' },
   },
 } as const;
 
@@ -524,7 +524,40 @@ export async function toolRoutes(
     rawType: string | undefined,
   ) => {
     const domain = parseDomain(rawDomain);
-    const type = String(rawType ?? 'A').toUpperCase();
+    const raw = String(rawType ?? 'A').toUpperCase();
+
+    if (raw.includes(',')) {
+      const types = normalizeDnsTypes(raw);
+      if (types.length < 2) {
+        throw ApiError.badRequest(
+          `多类型查询最多 6 个，可选：${['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME', 'SOA', 'SRV', 'CAA', 'ANY'].join(', ')}`,
+        );
+      }
+      const results = await Promise.all(types.map((item) => lookupDns(domain.ascii, item)));
+      const cached = results.every((item) => item.cached);
+      cacheHeaders(reply, cached, Math.min(...results.map((item) => item.ttlMs)));
+      metrics.recordQuery('dns', `${domain.ascii} ${types.join(',')}`, cached);
+      return {
+        success: true,
+        data: {
+          domain: domain.ascii,
+          tld: domain.tld,
+          sld: domain.sld,
+          idn: domain.idn,
+          unicodeDomain: domain.unicode,
+          types,
+          results,
+        },
+        meta: meta(request, {
+          source: 'dns',
+          resolver: 'system',
+          cached,
+          durationMs: Math.max(...results.map((item) => item.durationMs)),
+        }),
+      };
+    }
+
+    const type = raw;
     if (!isDnsType(type)) {
       throw ApiError.badRequest(`不支持的记录类型，可选：${['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME', 'SOA', 'SRV', 'CAA', 'ANY'].join(', ')}`);
     }

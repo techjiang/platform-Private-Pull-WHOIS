@@ -47,6 +47,19 @@ export function isDnsType(value: unknown): value is DnsQueryType {
   return upper === 'ANY' || (DNS_TYPES as readonly string[]).includes(upper);
 }
 
+/** 解析 A,AAAA,MX 形式的多记录类型，最多 6 个；存在非法类型时返回空数组 */
+export function normalizeDnsTypes(input: unknown): DnsQueryType[] {
+  const parts = String(input ?? '')
+    .toUpperCase()
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+  const unique = [...new Set(parts)];
+  if (unique.length === 0 || unique.length > 6) return [];
+  if (!unique.every((item) => isDnsType(item))) return [];
+  return unique;
+}
+
 function timeoutRun<T>(resolver: Resolver, timeoutMs: number, task: () => Promise<T>): Promise<T> {
   return new Promise<T>((resolve, reject) => {
     const timer = setTimeout(() => {

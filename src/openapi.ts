@@ -2,7 +2,7 @@ export const openapiSpec = {
   openapi: '3.1.0',
   info: {
     title: 'Pull WHOIS API',
-    version: '1.1.9',
+    version: '1.2.0',
     description:
       '轻量、生产级的域名情报 API：WHOIS、RDAP、DNS 记录与传播对比、IP 归属、域名历史、可用性检查、批量可注册检测、名称服务器反查、注册商目录、ICP 备案、TLS 证书与证书链、HTTP 安全响应头体检、域名健康评分与邮件安全记录。域名查询优先通过注册局 RDAP 获取结构化数据，未覆盖时自动回退到 WHOIS 43 端口。所有工具同时提供 /v1（API）与 /web/v1（网页端）两套路径。',
     license: { name: 'GPL-3.0-only', url: 'https://www.gnu.org/licenses/gpl-3.0.html' },
@@ -745,7 +745,8 @@ export const openapiSpec = {
         tags: ['DNS'],
         operationId: 'lookupDnsRecords',
         summary: '查询 DNS 记录',
-        description: '查询 A、AAAA、MX、TXT、NS、CNAME、SOA、SRV、CAA，或使用 ANY 一次获取全部记录。默认缓存 5 分钟。',
+        description:
+          '查询 A、AAAA、MX、TXT、NS、CNAME、SOA、SRV、CAA，或使用 ANY 一次获取全部记录。type 支持逗号分隔的多类型查询（如 A,AAAA,MX，最多 6 个），此时 data.results 返回每种类型的结果。默认缓存 5 分钟。',
         security: [{ ApiKeyAuth: [] }, { BearerAuth: [] }, {}],
         parameters: [
           {
@@ -757,10 +758,11 @@ export const openapiSpec = {
           {
             name: 'type',
             in: 'query',
+            description: '单个类型，或逗号分隔的多个类型（最多 6 个）',
             schema: {
               type: 'string',
-              enum: ['A', 'AAAA', 'MX', 'TXT', 'NS', 'CNAME', 'SOA', 'SRV', 'CAA', 'ANY'],
               default: 'A',
+              example: 'A,AAAA,MX',
             },
           },
         ],

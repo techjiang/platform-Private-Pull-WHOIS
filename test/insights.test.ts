@@ -2,8 +2,21 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { normalizeDomainList } from '../src/services/available.js';
 import { compareResolverRecords } from '../src/services/dnsprop.js';
+import { normalizeDnsTypes } from '../src/services/dns.js';
 import { scoreHealth } from '../src/services/health.js';
 import { analyzeHttpHeaders } from '../src/services/httpcheck.js';
+
+describe('normalizeDnsTypes', () => {
+  it('解析并去重多类型', () => {
+    assert.deepEqual(normalizeDnsTypes('a, AAAA ,mx'), ['A', 'AAAA', 'MX']);
+  });
+
+  it('拒绝非法类型与超量类型', () => {
+    assert.deepEqual(normalizeDnsTypes('A,INVALID'), []);
+    assert.deepEqual(normalizeDnsTypes('A,AAAA,MX,TXT,NS,CNAME,SOA'), []);
+    assert.deepEqual(normalizeDnsTypes(''), []);
+  });
+});
 
 describe('analyzeHttpHeaders', () => {
   it('完整安全头获得高分', () => {
