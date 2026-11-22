@@ -45,6 +45,12 @@ export interface WhoisData {
 /** 解析器输出的中间结构 */
 export interface ParsedRecord {
   available: boolean;
+  /**
+   * 结果是否足以判定注册状态。
+   * false 表示上游既未给出“未注册”提示、也没有任何注册证据（可能是限流或异常响应），
+   * 调用方应视为“无法确认”，不能当作“已注册”。
+   */
+  conclusive?: boolean;
   registrar: RegistrarInfo | null;
   registrant: RegistrantInfo | null;
   dates: DatesInfo;

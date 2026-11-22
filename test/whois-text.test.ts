@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { isAvailableText, parseWhois } from '../src/whois/whois-text.js';
+import { isUpstreamFailure } from '../src/whois/whois.js';
 
 const VERISIGN_RECORD = `
 Domain Name: EXAMPLE.COM
@@ -123,7 +124,7 @@ Creation Date: 2021-05-06
   });
 });
 
-const HK_AVAILABLE = `This domain is currently not available for registration. Please select other domain.`;
+const HK_AVAILABLE = `The domain has not been registered.`;
 
 describe('isAvailableText', () => {
   it('识别常见的未注册提示', () => {
@@ -139,5 +140,42 @@ describe('isAvailableText', () => {
     assert.equal(isAvailableText(HK_REGISTERED), false);
     assert.equal(isAvailableText('Too many requests, please try again later.'), false);
     assert.equal(isAvailableText(''), false);
+  });
+
+  it('“not available for registration” 表示不可注册，不能被当成可注册', () => {
+    assert.equal(
+      isAvailableText('This domain is currently not available for registration. Please select other domain.'),
+      false,
+    );
+    assert.equal(
+      isAvailableText('This domain is currently available for registration.'),
+      true,
+    );
+  });
+});
+
+describe('parseWhois 可判定性', () => {
+  it('空响应与异常响应标记为无法确认，不能当作已注册', () => {
+    assert.equal(parseWhois('').conclusive, false);
+    assert.equal(parseWhois('Access denied').conclusive, false);
+    assert.equal(parseWhois('<<< connection reset >>>').conclusive, false);
+  });
+
+  it('正常记录与明确的未注册提示均为可判定', () => {
+    assert.equal(parseWhois(VERISIGN_RECORD).conclusive, true);
+    assert.equal(parseWhois(HK_AVAILABLE).conclusive, true);
+    assert.equal(parseWhois(HK_AVAILABLE).available, true);
+  });
+});
+
+describe('isUpstreamFailure', () => {
+  it('注册局长篇免责声明里的 not authorised 不算上游故障', () => {
+    assert.equal(isUpstreamFailure(HK_REGISTERED), false);
+  });
+
+  it('真实的限流与错误页仍能被识别', () => {
+    assert.equal(isUpstreamFailure('Too many requests, please try again later.'), true);
+    assert.equal(isUpstreamFailure('Access denied'), true);
+    assert.equal(isUpstreamFailure(''), true);
   });
 });

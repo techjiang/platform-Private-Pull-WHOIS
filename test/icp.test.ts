@@ -124,4 +124,18 @@ describe('ICP 备案解析', () => {
     assert.equal(outcome.result.filed, false);
     assert.equal(outcome.result.unitName, null);
   });
+
+  it('上游故障不会误报为未备案', () => {
+    const realtime = parseRealtimeIcp('qq.com', { code: 500, msg: '查询失败' });
+    assert.equal(realtime.kind, 'error');
+    const offline = parseOfflineIcp('qq.com', { code: 400, msg: '参数错误' });
+    assert.equal(offline.kind, 'error');
+    const illegal = parseOfflineIcp('qq.com', { code: 400, msg: '域名格式非法' });
+    assert.equal(illegal.kind, 'error');
+  });
+
+  it('上游明确未备案时仍判定为未备案', () => {
+    const outcome = parseRealtimeIcp('not-filed.example', { code: 400, msg: '该域名未备案' });
+    assert.equal(outcome.kind, 'not_filed');
+  });
 });

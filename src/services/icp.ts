@@ -118,8 +118,13 @@ function rateLimitFromMessage(message: string): IcpParseOutcome {
   };
 }
 
-function failureMessage(message: string): boolean {
-  return /没有备案|未备案|无备案|查询失败|参数错误|域名.*(错误|非法)/.test(message);
+/**
+ * 仅当上游明确表达“没有备案记录”时才判定为未备案。
+ * 必须与“查询失败 / 参数错误 / 请求异常”等故障信息区分开，
+ * 否则会把上游故障误报成“未备案”。
+ */
+function notFiledMessage(message: string): boolean {
+  return /没有备案|未备案|无备案|无记录|未查询到|不存在备案|没有记录/.test(message);
 }
 
 /** 解析 apihz 实时库返回 */
@@ -130,7 +135,7 @@ export function parseRealtimeIcp(domain: string, payload: unknown): IcpParseOutc
   if (code !== 200) {
     const message = clean(body.msg) ?? '备案接口返回异常';
     if (/15\s*秒|频率|限制|资源池|会员|收费/.test(message)) return rateLimitFromMessage(message);
-    if (failureMessage(message)) {
+    if (notFiledMessage(message)) {
       return { kind: 'not_filed', result: buildResult(domain, 'icp-realtime', {
         icpCode: null,
         subjectCode: null,
@@ -163,7 +168,7 @@ export function parseOfflineIcp(domain: string, payload: unknown): IcpParseOutco
 
   if (code !== 200) {
     if (/15\s*秒|频率|限制|资源池|会员|收费/.test(message)) return rateLimitFromMessage(message);
-    if (failureMessage(message)) {
+    if (notFiledMessage(message)) {
       return { kind: 'not_filed', result: buildResult(domain, 'icp-offline', {
         icpCode: null,
         subjectCode: null,
@@ -363,6 +368,8 @@ export async function lookupIcp(
   const task = (async (): Promise<IcpResult> => {
     const attempts: AttemptNote[] = [];
     let rateLimited: IcpRateLimited | null = null;
+    /** 实时库明确返回“无记录”，需等离线库复核后才可作为最终结论 */
+    let realtimeMiss: IcpResult | null = null;
 
     const cooldownLeft = Math.ceil(
       (config.icp.cooldownMs - (Date.now() - lastRealtimeAt)) / 1000,
@@ -372,17 +379,18 @@ export async function lookupIcp(
       try {
         const payload = await requestJson(buildUrl(REALTIME_URL, domain));
         const parsed = parseRealtimeIcp(domain, payload);
-        if (parsed.kind === 'ok' || parsed.kind === 'not_filed') {
-          return remember(
-            domain,
-            parsed.result,
-            parsed.kind === 'ok' ? config.icp.cacheTtlMs : config.icp.missTtlMs,
-          );
+        if (parsed.kind === 'ok') {
+          return remember(domain, parsed.result, config.icp.cacheTtlMs);
         }
+        if (parsed.kind === 'not_filed') realtimeMiss = parsed.result;
         if (parsed.kind === 'rate_limited') {
           rateLimited = parsed;
         }
-        attempts.push({ source: 'icp-realtime', ok: false, error: parsed.message });
+        attempts.push({
+          source: 'icp-realtime',
+          ok: false,
+          error: parsed.kind === 'not_filed' ? '实时库未查询到记录' : parsed.message,
+        });
       } catch (error) {
         attempts.push({
           source: 'icp-realtime',
@@ -401,11 +409,20 @@ export async function lookupIcp(
     try {
       const payload = await requestJson(buildUrl(OFFLINE_URL, domain));
       const parsed = parseOfflineIcp(domain, payload);
-      if (parsed.kind === 'ok' || parsed.kind === 'not_filed') {
+      if (parsed.kind === 'ok') {
+        // 离线库命中说明实时库可能漏报或数据延迟，直接采用命中结果
+        return remember(domain, parsed.result, config.icp.cacheTtlMs / 2);
+      }
+      if (parsed.kind === 'not_filed') {
+        if (realtimeMiss) {
+          // 两个数据源都明确无记录，才给出未备案结论
+          return remember(domain, parsed.result, config.icp.missTtlMs);
+        }
+        // 实时库不可用（冷却或限流）时仅离线库可用，结论需明确标注来源
         return remember(
           domain,
-          parsed.result,
-          parsed.kind === 'ok' ? config.icp.cacheTtlMs / 2 : config.icp.missTtlMs,
+          { ...parsed.result, note: `${parsed.result.note}（本次仅离线库可用）` },
+          config.icp.missTtlMs,
         );
       }
       if (parsed.kind === 'rate_limited') rateLimited = parsed;
@@ -420,6 +437,15 @@ export async function lookupIcp(
         ok: false,
         error: error instanceof Error ? error.message : '请求失败',
       });
+    }
+
+    if (realtimeMiss) {
+      // 实时库明确无记录、离线库不可用：保留未备案结论并标注来源
+      return remember(
+        domain,
+        { ...realtimeMiss, note: `${realtimeMiss.note}（本次仅实时库可用）` },
+        config.icp.missTtlMs,
+      );
     }
 
     const local = readLocal(domain, config.icp.localMaxAgeMs);

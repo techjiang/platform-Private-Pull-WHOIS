@@ -1195,7 +1195,7 @@ function icpTemplate(data, meta) {
           <div>
             <div class="title-row">
               <h2>${esc(data.domain)}</h2>
-              ${filed ? pill('已备案', 'ok', true) : pill('未备案', 'muted', true)}
+              ${filed ? pill('已备案', 'ok', true) : pill('未查询到', 'muted', true)}
               ${data.stale ? pill('缓存数据', 'warn', true) : ''}
             </div>
             <p class="subline">
@@ -1240,7 +1240,7 @@ function icpTemplate(data, meta) {
                 </div>
               </section>
             </div>`
-          : `<div class="empty-card"><h3>未查询到 ICP 备案</h3><p>境外域名或未备案域名通常没有记录。若域名刚完成备案，数据源可能存在延迟；最终请以工信部备案系统为准。</p></div>`
+          : `<div class="empty-card"><h3>未查询到备案记录</h3><p>境外域名或未备案域名通常没有记录。若域名刚完成备案，数据源可能存在延迟；最终请以工信部备案系统为准。</p></div>`
       }
 
       <p class="callout">${esc(data.note)}</p>

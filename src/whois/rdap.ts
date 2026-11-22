@@ -298,6 +298,11 @@ export async function rdapLookup(
       if (response.status === 200) {
         const body = parseJson<RdapDomain>(response.text);
         if (!body) throw new Error('RDAP 返回了非 JSON 内容');
+        // 结构异常（缺少域名或对象类型不符）说明不是有效的 RDAP 域名记录，
+        // 继续尝试下一个数据源，避免把它误当成“已注册”
+        if (!body.ldhName || (body.objectClassName && body.objectClassName !== 'domain')) {
+          throw new Error('RDAP 返回的域名记录结构异常');
+        }
 
         attempts.push({
           source: 'rdap',

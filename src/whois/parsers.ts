@@ -19,10 +19,11 @@ const EMPTY_RECORD: ParsedRecord = {
   registryDomainId: null,
 };
 
-export function emptyParsedRecord(available = false): ParsedRecord {
+export function emptyParsedRecord(available = false, conclusive = true): ParsedRecord {
   return {
     ...EMPTY_RECORD,
     available,
+    conclusive,
     dates: { ...EMPTY_RECORD.dates },
     statuses: [],
     nameservers: [],
@@ -312,6 +313,7 @@ export function mergeParsed(primary: ParsedRecord, secondary: ParsedRecord): Par
 
   return {
     available: false,
+    conclusive: primary.conclusive !== false || secondary.conclusive !== false,
     registrar: mergeObject(primary.registrar, secondary.registrar, EMPTY_REGISTRAR),
     registrant: mergeObject(primary.registrant, secondary.registrant, {
       name: null,

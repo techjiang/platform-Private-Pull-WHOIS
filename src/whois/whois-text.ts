@@ -131,9 +131,7 @@ const AVAILABILITY_PATTERNS: RegExp[] = [
   /domain (name )?not found/,
   /is available for (registration|purchase)/,
   /available for registration/,
-  /not (been )?available for registration/,
   /has not been registered/,
-  /not been registered/,
   /the queried object does not exist/,
   /object does not exist/,
   /no information available/,
@@ -147,9 +145,11 @@ const UPSTREAM_ERROR_RE =
 
 /** 判断 WHOIS 文本是否表示“域名可注册”（仅扫描前导部分，避免页脚误判） */
 export function isAvailableText(text: string): boolean {
-  const normalized = leadText(text).toLowerCase();
-  if (!normalized.trim()) return false;
-  if (UPSTREAM_ERROR_RE.test(normalized)) return false;
+  const lead = leadText(text).toLowerCase();
+  if (!lead.trim()) return false;
+  if (UPSTREAM_ERROR_RE.test(lead)) return false;
+  // “not available for registration” 表示不可注册，先剔除该否定短语再匹配
+  const normalized = lead.replace(/not\s+(been\s+)?available for registration/g, ' ');
   return AVAILABILITY_PATTERNS.some((pattern) => pattern.test(normalized));
 }
 
@@ -342,9 +342,14 @@ export function parseWhois(text: string): ParsedRecord {
   if (available) {
     return emptyParsedRecord(true);
   }
+  if (!hasRegistrationEvidence) {
+    // 既没有注册证据，也没有明确的“未注册”提示：多为限流或异常响应，标记为无法确认
+    return emptyParsedRecord(false, false);
+  }
 
   return {
     available: false,
+    conclusive: true,
     registrar,
     registrant,
     dates,

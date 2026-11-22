@@ -144,12 +144,20 @@ async function queryOne(input: string): Promise<{ item: AvailabilityItem; cached
     }
 
     if (parsedRecord) {
-      status = parsedRecord.available ? 'available' : 'registered';
+      status =
+        parsedRecord.conclusive === false
+          ? 'unknown'
+          : parsedRecord.available
+            ? 'available'
+            : 'registered';
       registrar = parsedRecord.registrar?.name ?? null;
       expires = parsedRecord.dates.expires;
       created = parsedRecord.dates.created;
     } else if (!error) {
       error = '没有可用的 RDAP 或 WHOIS 数据源';
+    }
+    if (status === 'unknown' && !error) {
+      error = '上游未返回可判定的注册状态，请稍后重试';
     }
   } catch (queryError) {
     error = queryError instanceof Error ? queryError.message.slice(0, 160) : '查询失败';
